@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --no-turbopack --yes)",
+      "Bash(cd /tmp)",
+      "Bash(npx create-next-app@latest consultorio-lotti --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --no-turbopack --yes)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest init --yes --defaults)",
+      "Bash(npx shadcn@latest add button input label card dialog sheet tabs select checkbox switch badge avatar dropdown-menu calendar popover table separator skeleton alert command toast form textarea --yes)",
+      "Bash(npx shadcn@latest add sonner --yes)",
+      "Bash(npx tsc *)",
+      "Bash(npx shadcn@latest add input label card badge avatar dropdown-menu dialog sheet tabs select checkbox switch separator skeleton alert command textarea --yes)",
+      "Bash(node -e ' *)",
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(NEXT_TELEMETRY_DISABLED=1 npm run build)",
+      "Bash(mkdir -p \"/c/Users/dumon/AppData/Roaming/nextjs-nodejs/Config\")",
+      "Bash(echo '{\"telemetry\":{\"enabled\":false}}')"
+    ]
+  }
+}

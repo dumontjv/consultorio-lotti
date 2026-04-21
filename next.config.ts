@@ -1,7 +1,17 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  env: {
+    NEXT_TELEMETRY_DISABLED: '1',
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+    ],
+  },
+}
 
-export default nextConfig;
+export default nextConfig
