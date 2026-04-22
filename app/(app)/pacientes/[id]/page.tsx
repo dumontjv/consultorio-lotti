@@ -14,6 +14,8 @@ import {
   User,
   Stethoscope,
   FileText,
+  ClipboardList,
+  Package,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
@@ -341,6 +343,13 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
             </CardHeader>
             <CardContent className="space-y-2">
               <Link
+                href={`/pacientes/${id}/anamnese`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-start gap-2')}
+              >
+                <ClipboardList className="h-4 w-4" />
+                Anamnese
+              </Link>
+              <Link
                 href={`/pacientes/${id}/evolucoes`}
                 className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-start gap-2')}
               >
@@ -353,6 +362,13 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
               >
                 <FileText className="h-4 w-4" />
                 Documentos
+              </Link>
+              <Link
+                href={`/pacientes/${id}/pacotes`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-start gap-2')}
+              >
+                <Package className="h-4 w-4" />
+                Pacotes de Psicologia
               </Link>
             </CardContent>
           </Card>
