@@ -12,6 +12,8 @@ import {
   Calendar,
   Shield,
   User,
+  Stethoscope,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
@@ -328,6 +330,29 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
                 className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3 w-full justify-center')}
               >
                 Ver na agenda
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Atalhos */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-slate-500">Prontuário</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link
+                href={`/pacientes/${id}/evolucoes`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-start gap-2')}
+              >
+                <Stethoscope className="h-4 w-4" />
+                Evoluções Clínicas
+              </Link>
+              <Link
+                href={`/pacientes/${id}/documentos`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full justify-start gap-2')}
+              >
+                <FileText className="h-4 w-4" />
+                Documentos
               </Link>
             </CardContent>
           </Card>
