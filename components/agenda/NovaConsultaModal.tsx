@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
+import { Pencil } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -56,12 +57,14 @@ interface NovaConsultaModalProps {
   profissionais: Pick<Profile, 'id' | 'nome_completo' | 'role'>[]
   consulta?: ConsultaDetalhada
   dataInicial?: string
+  triggerVariant?: 'default' | 'icon'
 }
 
 export function NovaConsultaModal({
   profissionais,
   consulta,
   dataInicial,
+  triggerVariant = 'default',
 }: NovaConsultaModalProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -182,10 +185,22 @@ export function NovaConsultaModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className={cn(buttonVariants())}>
-        <Plus className="h-4 w-4 mr-1.5" />
-        {editing ? 'Editar consulta' : 'Nova consulta'}
-      </DialogTrigger>
+      {triggerVariant === 'icon' ? (
+        <DialogTrigger
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'h-7 w-7 p-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+          )}
+          title="Editar consulta"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger className={cn(buttonVariants())}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          {editing ? 'Editar consulta' : 'Nova consulta'}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? 'Editar consulta' : 'Agendar consulta'}</DialogTitle>
