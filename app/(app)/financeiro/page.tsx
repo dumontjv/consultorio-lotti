@@ -3,12 +3,13 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { DollarSign, TrendingUp, Clock, CheckCircle, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { NovoLancamentoModal } from '@/components/financeiro/NovoLancamentoModal'
+import { MarcarPagoModal } from '@/components/financeiro/MarcarPagoModal'
 
 interface PageProps {
   searchParams: Promise<{
@@ -139,7 +140,17 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
             {format(dataObj, 'MMMM yyyy', { locale: ptBR })}
           </p>
         </div>
-        <NovoLancamentoModal profissionais={todosProfs ?? []} />
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/exportar/financeiro?mes=${mesParam}${statusFiltro ? `&status=${statusFiltro}` : ''}`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            title="Exportar CSV"
+          >
+            <Download className="h-4 w-4 mr-1.5" />
+            CSV
+          </a>
+          <NovoLancamentoModal profissionais={todosProfs ?? []} />
+        </div>
       </div>
 
       {/* Resumo */}
@@ -276,9 +287,19 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
                         )}
                       </div>
                     </div>
-                    <p className="text-lg font-bold text-slate-800 shrink-0 tabular-nums">
-                      {formatMoeda(l.valor)}
-                    </p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {l.status === 'pendente' && (
+                        <MarcarPagoModal
+                          id={l.id}
+                          descricao={l.descricao}
+                          valor={l.valor}
+                          formaAtual={l.forma_pagamento}
+                        />
+                      )}
+                      <p className="text-lg font-bold text-slate-800 tabular-nums">
+                        {formatMoeda(l.valor)}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

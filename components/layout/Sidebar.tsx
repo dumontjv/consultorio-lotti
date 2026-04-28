@@ -22,6 +22,7 @@ import {
   ChevronRight,
   BarChart2,
   Stethoscope,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -96,6 +97,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/profissionais',
     label: 'Profissionais',
     icon: Stethoscope,
+    roles: ['admin'],
+  },
+  {
+    href: '/auditoria',
+    label: 'Auditoria',
+    icon: ShieldCheck,
     roles: ['admin'],
   },
   {

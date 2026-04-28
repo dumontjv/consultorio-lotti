@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { criarProfissional, atualizarProfissional } from '@/app/(app)/profissionais/actions'
+import { DisponibilidadeEditor, type Disponibilidade } from './DisponibilidadeEditor'
 import type { Profile } from '@/types/domain'
 
 const criarSchema = z.object({
@@ -30,6 +31,7 @@ const criarSchema = z.object({
   crp: z.string().optional(),
   telefone: z.string().optional(),
   ativo: z.boolean().default(true),
+  disponibilidade: z.record(z.string(), z.any()).optional(),
 })
 
 const editarSchema = criarSchema.omit({ email: true })
@@ -47,6 +49,11 @@ export function ProfissionalForm({ profissional, modo }: ProfissionalFormProps) 
   const [submitting, setSubmitting] = useState(false)
 
   const schema = modo === 'criar' ? criarSchema : editarSchema
+
+  const [disponibilidade, setDisponibilidade] = useState<Disponibilidade>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (profissional as any)?.disponibilidade ?? {}
+  )
 
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,10 +75,11 @@ export function ProfissionalForm({ profissional, modo }: ProfissionalFormProps) 
   async function onSubmit(values: FormValues) {
     setSubmitting(true)
     try {
+      const payload = { ...values, disponibilidade }
       const result =
         modo === 'criar'
-          ? await criarProfissional(values)
-          : await atualizarProfissional(profissional!.id, values)
+          ? await criarProfissional(payload)
+          : await atualizarProfissional(profissional!.id, payload)
 
       if (!result.success) {
         toast.error(result.error)
@@ -230,6 +238,17 @@ export function ProfissionalForm({ profissional, modo }: ProfissionalFormProps) 
                 )}
               />
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {(roleWatch === 'medica' || roleWatch === 'psicologa') && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Disponibilidade semanal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DisponibilidadeEditor value={disponibilidade} onChange={setDisponibilidade} />
           </CardContent>
         </Card>
       )}
