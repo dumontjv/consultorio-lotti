@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { DollarSign, TrendingUp, Clock, CheckCircle, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -139,7 +139,16 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
             {format(dataObj, 'MMMM yyyy', { locale: ptBR })}
           </p>
         </div>
-        <NovoLancamentoModal profissionais={todosProfs ?? []} />
+        <div className="flex items-center gap-2">
+          <a
+            href={`/financeiro/exportar?mes=${mesParam}${statusFiltro ? `&status=${statusFiltro}` : ''}`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            <Download className="h-4 w-4 mr-1.5" />
+            Exportar CSV
+          </a>
+          <NovoLancamentoModal profissionais={todosProfs ?? []} />
+        </div>
       </div>
 
       {/* Resumo */}

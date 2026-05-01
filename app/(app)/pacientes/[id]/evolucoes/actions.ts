@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
@@ -68,6 +69,7 @@ export async function criarEvolucao(values: unknown): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao salvar evolução. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'evolucoes', entidadeId: data.id })
   revalidatePath(`/pacientes/${parsed.data.paciente_id}/evolucoes`)
   return { success: true, id: data.id }
 }
@@ -87,6 +89,7 @@ export async function atualizarEvolucao(id: string, values: unknown): Promise<Ac
   const { error } = await supabase.from('evolucoes').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar evolução. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'evolucoes', entidadeId: id })
   revalidatePath(`/pacientes/${parsed.data.paciente_id}/evolucoes`)
   return { success: true, id }
 }
@@ -101,6 +104,7 @@ export async function deletarEvolucao(id: string, pacienteId: string): Promise<A
   const { error } = await supabase.from('evolucoes').delete().eq('id', id)
   if (error) return { success: false, error: 'Erro ao excluir evolução.' }
 
+  await registrarAuditoria({ acao: 'delete', entidade: 'evolucoes', entidadeId: id })
   revalidatePath(`/pacientes/${pacienteId}/evolucoes`)
   return { success: true, id }
 }

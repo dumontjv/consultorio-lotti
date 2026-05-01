@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { validarCPF } from '@/lib/validators/cpf'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = () =>
   z
@@ -92,6 +93,7 @@ export async function criarPaciente(values: unknown): Promise<ActionResult> {
     return { success: false, error: 'Erro ao salvar paciente. Tente novamente.' }
   }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'pacientes', entidadeId: paciente.id })
   revalidatePath('/pacientes')
   return { success: true, id: paciente.id }
 }
@@ -129,6 +131,7 @@ export async function atualizarPaciente(id: string, values: unknown): Promise<Ac
     return { success: false, error: 'Erro ao atualizar paciente. Tente novamente.' }
   }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'pacientes', entidadeId: id })
   revalidatePath('/pacientes')
   revalidatePath(`/pacientes/${id}`)
   return { success: true, id }
@@ -149,6 +152,7 @@ export async function deletarPaciente(id: string): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao remover paciente' }
 
+  await registrarAuditoria({ acao: 'delete', entidade: 'pacientes', entidadeId: id })
   revalidatePath('/pacientes')
   redirect('/pacientes')
 }

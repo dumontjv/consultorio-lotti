@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const consultaSchema = z.object({
   paciente_id: z.string().uuid('Selecione um paciente válido'),
@@ -48,6 +49,7 @@ export async function criarConsulta(values: unknown): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao agendar consulta. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'consultas', entidadeId: consulta.id })
   revalidatePath('/agenda')
   return { success: true, id: consulta.id }
 }
@@ -67,6 +69,7 @@ export async function atualizarConsulta(id: string, values: unknown): Promise<Ac
   const { error } = await supabase.from('consultas').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar consulta. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'consultas', entidadeId: id })
   revalidatePath('/agenda')
   return { success: true, id }
 }
@@ -84,6 +87,7 @@ export async function atualizarStatusConsulta(
   const { error } = await supabase.from('consultas').update({ status }).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar status' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'consultas', entidadeId: id })
   revalidatePath('/agenda')
   return { success: true, id }
 }

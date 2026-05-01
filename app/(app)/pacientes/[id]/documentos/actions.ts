@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
@@ -40,6 +41,7 @@ export async function criarDocumento(values: unknown): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao criar documento. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'documentos', entidadeId: data.id })
   revalidatePath(`/pacientes/${parsed.data.paciente_id}/documentos`)
   revalidatePath('/documentos')
   return { success: true, id: data.id }
@@ -60,6 +62,7 @@ export async function atualizarDocumento(id: string, values: unknown): Promise<A
   const { error } = await supabase.from('documentos').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar documento. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'documentos', entidadeId: id })
   revalidatePath(`/pacientes/${parsed.data.paciente_id}/documentos`)
   revalidatePath('/documentos')
   return { success: true, id }
@@ -75,6 +78,7 @@ export async function deletarDocumento(id: string, pacienteId: string): Promise<
   const { error } = await supabase.from('documentos').delete().eq('id', id)
   if (error) return { success: false, error: 'Erro ao excluir documento.' }
 
+  await registrarAuditoria({ acao: 'delete', entidade: 'documentos', entidadeId: id })
   revalidatePath(`/pacientes/${pacienteId}/documentos`)
   revalidatePath('/documentos')
   return { success: true, id }

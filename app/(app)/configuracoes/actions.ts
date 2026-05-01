@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
@@ -36,6 +37,7 @@ export async function salvarConfiguracoes(values: unknown): Promise<ActionResult
 
   if (error) return { success: false, error: 'Erro ao salvar configurações.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'configuracoes' })
   revalidatePath('/configuracoes')
   return { success: true }
 }
@@ -43,6 +45,7 @@ export async function salvarConfiguracoes(values: unknown): Promise<ActionResult
 export async function salvarPerfilUsuario(values: {
   nome_completo: string
   telefone?: string | null
+  foto_url?: string | null
 }): Promise<ActionResult> {
   const supabase = await createClient()
   const {
@@ -55,11 +58,31 @@ export async function salvarPerfilUsuario(values: {
     .update({
       nome_completo: values.nome_completo.trim(),
       telefone: values.telefone?.trim() || null,
+      ...(values.foto_url !== undefined ? { foto_url: values.foto_url } : {}),
     })
     .eq('id', user.id)
 
   if (error) return { success: false, error: 'Erro ao salvar perfil.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'profiles', entidadeId: user.id })
   revalidatePath('/configuracoes/perfil')
+  return { success: true }
+}
+
+export async function salvarLogoConsultorio(logoUrl: string): Promise<ActionResult> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('configuracoes')
+    .upsert({ id: 1, consultorio_logo_url: logoUrl }, { onConflict: 'id' })
+
+  if (error) return { success: false, error: 'Erro ao salvar logo.' }
+
+  await registrarAuditoria({ acao: 'update', entidade: 'configuracoes' })
+  revalidatePath('/configuracoes')
   return { success: true }
 }
