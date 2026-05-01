@@ -16,6 +16,7 @@ import {
   BookOpen,
   Video,
   Settings,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -83,6 +84,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Teleconsulta',
     icon: Video,
     roles: ['admin', 'medica', 'psicologa'],
+  },
+  {
+    href: '/audit-log',
+    label: 'Audit Log',
+    icon: ShieldCheck,
+    roles: ['admin'],
   },
   {
     href: '/configuracoes',

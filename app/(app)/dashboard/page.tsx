@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar, Users, DollarSign, Clock, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
+import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -26,17 +27,19 @@ export default async function DashboardPage() {
   if (!profile) redirect('/login')
 
   const hoje = format(new Date(), 'yyyy-MM-dd')
-  const inicioMes = format(new Date(), 'yyyy-MM-01')
-  const fimMes = format(
-    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
-    'yyyy-MM-dd'
-  )
+  const inicioMes = format(startOfMonth(new Date()), 'yyyy-MM-dd')
+  const fimMes    = format(endOfMonth(new Date()), 'yyyy-MM-dd')
+
+  // Intervalo para receita mensal (6 meses)
+  const inicio6Meses = format(startOfMonth(subMonths(new Date(), 5)), 'yyyy-MM-dd')
 
   const [
     { count: consultasHoje },
     { count: totalPacientes },
     { data: proximasConsultasRaw },
     { data: financeiroMes },
+    { data: financeiro6Meses },
+    { data: consultasMes },
   ] = await Promise.all([
     supabase
       .from('consultas')
@@ -60,33 +63,70 @@ export default async function DashboardPage() {
       .select('valor, status')
       .gte('data_vencimento', inicioMes)
       .lte('data_vencimento', fimMes),
+    supabase
+      .from('financeiro')
+      .select('valor, status, data_vencimento')
+      .eq('status', 'pago')
+      .gte('data_vencimento', inicio6Meses)
+      .lte('data_vencimento', fimMes),
+    supabase
+      .from('consultas')
+      .select('profissional_id, status')
+      .gte('data', inicioMes)
+      .lte('data', fimMes)
+      .not('status', 'eq', 'cancelada'),
   ])
 
-  // Busca nomes dos pacientes e profissionais para as próximas consultas
-  const pacIds = [...new Set((proximasConsultasRaw ?? []).map((c) => c.paciente_id))]
+  // Nomes dos pacientes e profissionais para próximas consultas
+  const pacIds  = [...new Set((proximasConsultasRaw ?? []).map((c) => c.paciente_id))]
   const profIds = [...new Set((proximasConsultasRaw ?? []).map((c) => c.profissional_id))]
 
-  const [{ data: pacientes }, { data: profissionais }] = await Promise.all([
+  const [{ data: pacientes }, { data: profissionais }, { data: todosProfs }] = await Promise.all([
     pacIds.length > 0
       ? supabase.from('pacientes').select('id, nome_completo').in('id', pacIds)
       : Promise.resolve({ data: [] }),
     profIds.length > 0
       ? supabase.from('profiles').select('id, nome_completo, role').in('id', profIds)
       : Promise.resolve({ data: [] }),
+    supabase
+      .from('profiles')
+      .select('id, nome_completo, role')
+      .in('role', ['medica', 'psicologa'])
+      .eq('ativo', true),
   ])
 
-  const pacMap = new Map((pacientes ?? []).map((p) => [p.id, p]))
+  const pacMap  = new Map((pacientes  ?? []).map((p) => [p.id, p]))
   const profMap = new Map((profissionais ?? []).map((p) => [p.id, p]))
+  const allProfMap = new Map((todosProfs ?? []).map((p) => [p.id, p]))
 
-  // Cálculos financeiros
-  const aReceber = (financeiroMes ?? [])
-    .filter((f) => f.status === 'pendente')
-    .reduce((s, f) => s + (f.valor ?? 0), 0)
-  const recebidoMes = (financeiroMes ?? [])
-    .filter((f) => f.status === 'pago')
-    .reduce((s, f) => s + (f.valor ?? 0), 0)
+  // Cálculos financeiros do mês
+  const aReceber    = (financeiroMes ?? []).filter((f) => f.status === 'pendente').reduce((s, f) => s + (f.valor ?? 0), 0)
+  const recebidoMes = (financeiroMes ?? []).filter((f) => f.status === 'pago').reduce((s, f) => s + (f.valor ?? 0), 0)
 
-  const saudacao = getSaudacao()
+  // Receita agrupada por mês (últimos 6 meses)
+  const receitaMensal = Array.from({ length: 6 }, (_, i) => {
+    const ref = subMonths(new Date(), 5 - i)
+    const chave = format(ref, 'yyyy-MM')
+    const label = format(ref, 'MMM', { locale: ptBR })
+    const valor = (financeiro6Meses ?? [])
+      .filter((f) => f.data_vencimento?.startsWith(chave))
+      .reduce((s, f) => s + (f.valor ?? 0), 0)
+    return { mes: label, valor }
+  })
+
+  // Consultas por profissional no mês
+  const contadorProf = new Map<string, number>()
+  for (const c of consultasMes ?? []) {
+    contadorProf.set(c.profissional_id, (contadorProf.get(c.profissional_id) ?? 0) + 1)
+  }
+  const consultasPorProfissional = [...contadorProf.entries()]
+    .map(([id, total]) => {
+      const prof = allProfMap.get(id)
+      return { nome: prof?.nome_completo?.split(' ')[0] ?? 'Profissional', total, role: prof?.role ?? 'admin' }
+    })
+    .sort((a, b) => b.total - a.total)
+
+  const saudacao      = getSaudacao()
   const nomeAbreviado = profile.nome_completo.split(' ')[0]
 
   function formatMoeda(v: number) {
@@ -160,6 +200,12 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* Gráficos */}
+      <DashboardCharts
+        receitaMensal={receitaMensal}
+        consultasPorProfissional={consultasPorProfissional}
+      />
+
       {/* Próximas consultas */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -184,8 +230,8 @@ export default async function DashboardPage() {
             <div className="divide-y divide-slate-50">
               {proximasConsultasRaw.map((consulta) => {
                 const isHoje = consulta.data === hoje
-                const pac = pacMap.get(consulta.paciente_id)
-                const prof = profMap.get(consulta.profissional_id)
+                const pac    = pacMap.get(consulta.paciente_id)
+                const prof   = profMap.get(consulta.profissional_id)
 
                 return (
                   <div
@@ -207,9 +253,7 @@ export default async function DashboardPage() {
                           <span className={isHoje ? 'text-teal-600 font-medium' : ''}>
                             {isHoje
                               ? 'Hoje'
-                              : format(new Date(consulta.data + 'T00:00:00'), "d 'de' MMM", {
-                                  locale: ptBR,
-                                })}
+                              : format(new Date(consulta.data + 'T00:00:00'), "d 'de' MMM", { locale: ptBR })}
                           </span>
                           {' às '}
                           {consulta.hora_inicio}
