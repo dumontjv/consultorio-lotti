@@ -51,6 +51,7 @@ const s = StyleSheet.create({
   },
   headerLine: {
     fontSize: 8.5,
+    fontFamily: 'Helvetica',
     color: GRAY_500,
     marginBottom: 2,
   },
@@ -99,6 +100,7 @@ const s = StyleSheet.create({
   },
   metaValue: {
     fontSize: 8.5,
+    fontFamily: 'Helvetica',
     color: SLATE_800,
     flex: 1,
   },
@@ -111,6 +113,7 @@ const s = StyleSheet.create({
   },
   content: {
     fontSize: 10.5,
+    fontFamily: 'Helvetica',
     lineHeight: 1.65,
     color: SLATE_800,
   },
@@ -136,6 +139,7 @@ const s = StyleSheet.create({
   },
   signatureCred: {
     fontSize: 9,
+    fontFamily: 'Helvetica',
     color: GRAY_400,
     textAlign: 'center',
     marginTop: 2,
@@ -145,6 +149,7 @@ const s = StyleSheet.create({
     bottom: 20,
     right: 55,
     fontSize: 8,
+    fontFamily: 'Helvetica',
     color: GRAY_400,
   },
 })
