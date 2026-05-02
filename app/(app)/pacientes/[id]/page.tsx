@@ -22,6 +22,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { ExcluirPacienteButton } from '@/components/pacientes/ExcluirPacienteButton'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -43,6 +44,12 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
   const { data: paciente } = await supabase
     .from('pacientes')
@@ -128,10 +135,15 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
             </div>
           </div>
         </div>
-        <Link href={`/pacientes/${id}/editar`} className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
-          <Pencil className="h-4 w-4 mr-1.5" />
-          Editar
-        </Link>
+        <div className="flex items-center gap-2">
+          {profile?.role !== 'admin' && (
+            <ExcluirPacienteButton pacienteId={id} nomePaciente={paciente.nome_completo} />
+          )}
+          <Link href={`/pacientes/${id}/editar`} className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+            <Pencil className="h-4 w-4 mr-1.5" />
+            Editar
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

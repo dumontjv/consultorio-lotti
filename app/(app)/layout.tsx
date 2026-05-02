@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <Sidebar
         userRole={profile.role as UserRole}
         userName={profile.nome_completo}
