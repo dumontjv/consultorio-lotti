@@ -56,7 +56,12 @@ export async function GET(
   )
 
   const element = createElement(DocumentoPDF, {
-    doc,
+    doc: {
+      titulo: doc.titulo,
+      tipo: doc.tipo,
+      conteudo: doc.conteudo,
+      data_emissao: doc.data_emissao,
+    },
     paciente,
     prof,
     config,
