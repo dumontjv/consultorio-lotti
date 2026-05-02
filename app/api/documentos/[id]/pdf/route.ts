@@ -63,7 +63,7 @@ export async function GET(
     dataFormatada,
   })
 
-  const buffer = await renderToBuffer(element)
+  const buffer = await renderToBuffer(element as Parameters<typeof renderToBuffer>[0])
 
   const nomeArquivo = [
     doc.tipo,
@@ -74,7 +74,7 @@ export async function GET(
     .toLowerCase()
     .replace(/[^a-z0-9_-]/g, '')
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${nomeArquivo}.pdf"`,
