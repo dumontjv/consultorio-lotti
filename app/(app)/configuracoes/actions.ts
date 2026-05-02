@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { registrarAuditoria } from '@/lib/audit/log'
@@ -31,9 +32,11 @@ export async function salvarConfiguracoes(values: unknown): Promise<ActionResult
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' }
   }
 
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('configuracoes')
-    .upsert({ id: 1, ...parsed.data }, { onConflict: 'id' })
+    .update(parsed.data)
+    .eq('id', 1)
 
   if (error) return { success: false, error: 'Erro ao salvar configurações.' }
 
@@ -76,11 +79,13 @@ export async function salvarLogoConsultorio(logoUrl: string): Promise<ActionResu
   } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('configuracoes')
-    .upsert({ id: 1, consultorio_logo_url: logoUrl }, { onConflict: 'id' })
+    .update({ consultorio_logo_url: logoUrl })
+    .eq('id', 1)
 
-  if (error) return { success: false, error: 'Erro ao salvar logo.' }
+  if (error) return { success: false, error: `Erro ao salvar logo: ${error.message}` }
 
   await registrarAuditoria({ acao: 'update', entidade: 'configuracoes' })
   revalidatePath('/configuracoes')
