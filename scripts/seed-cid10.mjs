@@ -2,29 +2,47 @@
 /**
  * Importa o CID-10 completo em português brasileiro (fonte: DATASUS via GitHub)
  *
- * Uso:
+ * Uso (na pasta raiz do projeto):
  *   node scripts/seed-cid10.mjs
  *
- * Requer variáveis de ambiente (crie um .env.local ou exporte antes de rodar):
- *   SUPABASE_URL=https://xxxx.supabase.co
- *   SUPABASE_SERVICE_ROLE_KEY=eyJ...
- *
- * Instale dotenv se necessário: npm install dotenv
+ * O script lê automaticamente o .env.local do projeto.
+ * Certifique-se de que ele contém:
+ *   NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+ *   SUPABASE_SERVICE_ROLE_KEY=eyJ...  ← copiar do painel Supabase > Project Settings > API
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { config } from 'dotenv'
+import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-config({ path: resolve(__dirname, '../.env.local') })
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+// Lê .env.local sem precisar de dotenv
+function loadEnv() {
+  const envPath = resolve(__dirname, '../.env.local')
+  if (!existsSync(envPath)) return
+  const lines = readFileSync(envPath, 'utf-8').split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const key = trimmed.slice(0, eq).trim()
+    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '')
+    if (!process.env[key]) process.env[key] = val
+  }
+}
+loadEnv()
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env.local')
+  console.error('\n❌ Variáveis ausentes no .env.local:')
+  if (!SUPABASE_URL) console.error('   NEXT_PUBLIC_SUPABASE_URL não encontrada')
+  if (!SUPABASE_KEY) console.error('   SUPABASE_SERVICE_ROLE_KEY não encontrada')
+  console.error('\n   Copie a service_role key em: Supabase → Project Settings → API\n')
   process.exit(1)
 }
 
@@ -58,18 +76,15 @@ const CAPITULOS = [
 
 function getCapitulo(codigo) {
   const letra = codigo[0].toUpperCase()
-  const numero = parseInt(codigo.slice(1, 3)) || 0
-  const codigoNum = letra + codigo.slice(1, 3).padStart(2, '0')
-
   for (const cap of CAPITULOS) {
     if (cap.inicio.length === 1 && cap.fim.length === 1) {
       if (letra >= cap.inicio && letra <= cap.fim) return cap.nome
     } else if (cap.inicio.length === 1) {
-      // início de letra única, fim com número
+      const codigoNum = letra + codigo.slice(1, 3).padStart(2, '0')
       if (letra === cap.inicio[0] && codigoNum <= cap.fim) return cap.nome
       if (letra > cap.inicio[0] && letra <= cap.fim.slice(-1)) return cap.nome
     } else {
-      // ambos com letra+número
+      const codigoNum = letra + codigo.slice(1, 3).padStart(2, '0')
       if (codigoNum >= cap.inicio && codigoNum <= cap.fim) return cap.nome
     }
   }
@@ -78,7 +93,6 @@ function getCapitulo(codigo) {
 
 function parseSql(sql) {
   const results = []
-  // Extrai VALUES ('CODE','DESCRICAO') de cada INSERT
   const regex = /VALUES\s*\('([^']+)','((?:[^']|'')+)'\)/gi
   let match
   while ((match = regex.exec(sql)) !== null) {
@@ -108,7 +122,7 @@ async function main() {
 
   const baseUrl = 'https://raw.githubusercontent.com/lucasrafagnin/CID10-SQL/master'
 
-  // ── Importar subcategorias (4 dígitos) ──────────────────────────────────
+  // ── Subcategorias (4 dígitos) ───────────────────────────────
   console.log('📂 Subcategorias (códigos completos)...')
   const subSql = await fetchSql(`${baseUrl}/subcategoria.sql`)
   const subcats = parseSql(subSql)
@@ -131,7 +145,7 @@ async function main() {
   }
   console.log(`\n  ✅ Subcategorias concluído\n`)
 
-  // ── Importar categorias (3 dígitos) ─────────────────────────────────────
+  // ── Categorias (3 dígitos) ──────────────────────────────────
   console.log('📂 Categorias (3 dígitos)...')
   const catSql = await fetchSql(`${baseUrl}/categoria.sql`)
   const cats = parseSql(catSql)
@@ -153,8 +167,7 @@ async function main() {
   }
   console.log(`\n  ✅ Categorias concluído\n`)
 
-  const total = subRows.length + catRows.length
-  console.log(`🎉 Importação CID-10 concluída! ${total} códigos importados.\n`)
+  console.log(`🎉 Importação CID-10 concluída! ${subRows.length + catRows.length} códigos importados.\n`)
 }
 
 main().catch((err) => {
