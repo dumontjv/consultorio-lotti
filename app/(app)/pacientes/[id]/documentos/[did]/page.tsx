@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronRight, FileText, Pencil } from 'lucide-react'
+import { ChevronRight, Download, FileText, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -120,6 +120,14 @@ export default async function DocumentoDetalhePage({ params }: PageProps) {
             </p>
           </div>
           <div className="no-print flex gap-2 shrink-0">
+            <a
+              href={`/api/documentos/${did}/pdf`}
+              download
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              Baixar PDF
+            </a>
             <PrintDocumentoButton />
             {doc.status === 'rascunho' && (
               <Link
