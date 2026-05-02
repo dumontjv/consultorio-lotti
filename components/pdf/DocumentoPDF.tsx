@@ -1,4 +1,18 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
+
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me5Q.ttf',
+      fontWeight: 400,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/roboto/v32/KFOlCnqEu92Fr1MmEU9fBBc9.ttf',
+      fontWeight: 700,
+    },
+  ],
+})
 
 const TEAL = '#0f766e'
 const TEAL_LIGHT = '#f0fdfa'
@@ -20,7 +34,7 @@ const TIPO_LABELS: Record<string, string> = {
 
 const s = StyleSheet.create({
   page: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     fontSize: 10,
     color: SLATE_800,
     paddingTop: 45,
@@ -45,13 +59,14 @@ const s = StyleSheet.create({
   },
   nomePrincipal: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: TEAL,
     marginBottom: 4,
   },
   headerLine: {
     fontSize: 8.5,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     color: GRAY_500,
     marginBottom: 2,
   },
@@ -71,13 +86,15 @@ const s = StyleSheet.create({
   },
   tipoText: {
     fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: TEAL,
     marginBottom: 2,
   },
   tituloText: {
     fontSize: 13,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: GRAY_900,
   },
   // ── Meta info box ─────────────────────────────────────
@@ -94,26 +111,28 @@ const s = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 8.5,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: GRAY_500,
     width: 65,
   },
   metaValue: {
     fontSize: 8.5,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     color: SLATE_800,
     flex: 1,
   },
   // ── Content ──────────────────────────────────────────
   sectionLabel: {
     fontSize: 8,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: GRAY_400,
     marginBottom: 8,
   },
   content: {
     fontSize: 10.5,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     lineHeight: 1.65,
     color: SLATE_800,
   },
@@ -133,13 +152,14 @@ const s = StyleSheet.create({
   },
   signatureName: {
     fontSize: 10,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Roboto',
+    fontWeight: 700,
     color: SLATE_800,
     textAlign: 'center',
   },
   signatureCred: {
     fontSize: 9,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     color: GRAY_400,
     textAlign: 'center',
     marginTop: 2,
@@ -149,7 +169,7 @@ const s = StyleSheet.create({
     bottom: 20,
     right: 55,
     fontSize: 8,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     color: GRAY_400,
   },
 })
