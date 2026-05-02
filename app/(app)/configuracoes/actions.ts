@@ -85,7 +85,7 @@ export async function salvarLogoConsultorio(logoUrl: string): Promise<ActionResu
     .update({ consultorio_logo_url: logoUrl })
     .eq('id', 1)
 
-  if (error) return { success: false, error: `Erro ao salvar logo: ${error.message}` }
+  if (error) return { success: false, error: 'Erro ao salvar logo.' }
 
   await registrarAuditoria({ acao: 'update', entidade: 'configuracoes' })
   revalidatePath('/configuracoes')
