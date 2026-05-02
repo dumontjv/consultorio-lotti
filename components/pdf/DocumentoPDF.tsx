@@ -153,7 +153,7 @@ export interface DocumentoPDFProps {
   doc: {
     titulo: string
     tipo: string
-    conteudo: string
+    conteudo: string | null
     data_emissao: string
   }
   paciente: { nome_completo: string } | null
@@ -229,7 +229,7 @@ export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: Doc
 
         {/* Content */}
         <Text style={s.sectionLabel}>CONTEÚDO</Text>
-        <Text style={s.content}>{doc.conteudo}</Text>
+        <Text style={s.content}>{doc.conteudo ?? ''}</Text>
 
         {/* Signature */}
         {prof && (
