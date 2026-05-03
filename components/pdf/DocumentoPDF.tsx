@@ -1,12 +1,18 @@
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
 
-// Mapeia font stacks CSS comuns para fontes built-in do PDFKit.
-// Isso previne "Font family not registered" quando o ambiente resolve
-// alguma herança/variável CSS antes de chegar no renderer.
-Font.register({ family: 'Georgia, serif', src: 'Helvetica' })
-Font.register({ family: 'serif', src: 'Times-Roman' })
-Font.register({ family: 'sans-serif', src: 'Helvetica' })
-Font.register({ family: 'monospace', src: 'Courier' })
+// Register all CSS generic/legacy font family names with the full weight matrix so
+// @react-pdf never throws "Could not resolve font" regardless of which weight or style
+// is requested. Using the fonts-array form (same as @react-pdf's own built-in
+// registrations) guarantees every weight/style combination is covered.
+const FULL_HELVETICA_FONTS = [
+  { src: 'Helvetica',           fontWeight: 400 as const, fontStyle: 'normal'  as const },
+  { src: 'Helvetica-Bold',      fontWeight: 700 as const, fontStyle: 'normal'  as const },
+  { src: 'Helvetica-Oblique',   fontWeight: 400 as const, fontStyle: 'italic'  as const },
+  { src: 'Helvetica-BoldOblique', fontWeight: 700 as const, fontStyle: 'italic' as const },
+]
+for (const family of ['Georgia, serif', 'Georgia', 'serif', 'sans-serif', 'monospace', 'system-ui']) {
+  Font.register({ family, fonts: FULL_HELVETICA_FONTS })
+}
 
 const TEAL = '#0f766e'
 const TEAL_LIGHT = '#f0fdfa'
@@ -52,7 +58,8 @@ const s = StyleSheet.create({
   },
   nomePrincipal: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: TEAL,
     marginBottom: 4,
   },
@@ -77,13 +84,15 @@ const s = StyleSheet.create({
   },
   tipoText: {
     fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: TEAL,
     marginBottom: 2,
   },
   tituloText: {
     fontSize: 13,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: GRAY_900,
   },
   metaBox: {
@@ -99,7 +108,8 @@ const s = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 8.5,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: GRAY_500,
     width: 65,
   },
@@ -111,7 +121,8 @@ const s = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 8,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: GRAY_400,
     marginBottom: 8,
   },
@@ -136,7 +147,8 @@ const s = StyleSheet.create({
   },
   signatureName: {
     fontSize: 10,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
+    fontWeight: 700,
     color: SLATE_800,
     textAlign: 'center',
   },
