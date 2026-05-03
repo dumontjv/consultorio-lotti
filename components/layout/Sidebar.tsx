@@ -14,6 +14,7 @@ import {
   BellRing,
   FileText,
   DollarSign,
+  BarChart2,
   BookOpen,
   Video,
   Settings,
@@ -82,6 +83,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Financeiro',
     icon: DollarSign,
     roles: ['admin', 'medica', 'psicologa', 'secretaria'],
+  },
+  {
+    href: '/relatorios',
+    label: 'Relatórios',
+    icon: BarChart2,
+    roles: ['admin', 'medica', 'psicologa'],
   },
   {
     href: '/cid',
