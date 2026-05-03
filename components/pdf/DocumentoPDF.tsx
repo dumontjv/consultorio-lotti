@@ -1,18 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
-
-Font.register({
-  family: 'Roboto',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me5Q.ttf',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/roboto/v32/KFOlCnqEu92Fr1MmEU9fBBc9.ttf',
-      fontWeight: 700,
-    },
-  ],
-})
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 
 const TEAL = '#0f766e'
 const TEAL_LIGHT = '#f0fdfa'
@@ -34,14 +20,13 @@ const TIPO_LABELS: Record<string, string> = {
 
 const s = StyleSheet.create({
   page: {
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     fontSize: 10,
     color: SLATE_800,
     paddingTop: 45,
     paddingBottom: 90,
     paddingHorizontal: 55,
   },
-  // ── Header ────────────────────────────────────────────
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -59,14 +44,13 @@ const s = StyleSheet.create({
   },
   nomePrincipal: {
     fontSize: 16,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: TEAL,
     marginBottom: 4,
   },
   headerLine: {
     fontSize: 8.5,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     color: GRAY_500,
     marginBottom: 2,
   },
@@ -75,7 +59,6 @@ const s = StyleSheet.create({
     borderBottomColor: TEAL,
     marginBottom: 22,
   },
-  // ── Document type strip ───────────────────────────────
   tipoStrip: {
     backgroundColor: TEAL_LIGHT,
     borderLeftWidth: 3,
@@ -86,18 +69,15 @@ const s = StyleSheet.create({
   },
   tipoText: {
     fontSize: 9,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: TEAL,
     marginBottom: 2,
   },
   tituloText: {
     fontSize: 13,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: GRAY_900,
   },
-  // ── Meta info box ─────────────────────────────────────
   metaBox: {
     backgroundColor: GRAY_50,
     borderRadius: 4,
@@ -111,32 +91,28 @@ const s = StyleSheet.create({
   },
   metaLabel: {
     fontSize: 8.5,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: GRAY_500,
     width: 65,
   },
   metaValue: {
     fontSize: 8.5,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     color: SLATE_800,
     flex: 1,
   },
-  // ── Content ──────────────────────────────────────────
   sectionLabel: {
     fontSize: 8,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: GRAY_400,
     marginBottom: 8,
   },
   content: {
     fontSize: 10.5,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     lineHeight: 1.65,
     color: SLATE_800,
   },
-  // ── Signature ─────────────────────────────────────────
   signatureWrap: {
     position: 'absolute',
     bottom: 45,
@@ -152,14 +128,13 @@ const s = StyleSheet.create({
   },
   signatureName: {
     fontSize: 10,
-    fontFamily: 'Roboto',
-    fontWeight: 700,
+    fontFamily: 'Helvetica-Bold',
     color: SLATE_800,
     textAlign: 'center',
   },
   signatureCred: {
     fontSize: 9,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     color: GRAY_400,
     textAlign: 'center',
     marginTop: 2,
@@ -169,7 +144,7 @@ const s = StyleSheet.create({
     bottom: 20,
     right: 55,
     fontSize: 8,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     color: GRAY_400,
   },
 })
@@ -219,7 +194,6 @@ export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: Doc
       creator={nomeConsultorio}
     >
       <Page size="A4" style={s.page}>
-        {/* Header */}
         <View style={s.headerRow}>
           {config?.consultorio_logo_url && (
             <Image src={config.consultorio_logo_url} style={s.logo} />
@@ -234,13 +208,11 @@ export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: Doc
 
         <View style={s.divider} />
 
-        {/* Document type + title */}
         <View style={s.tipoStrip}>
           <Text style={s.tipoText}>{tipoLabel}</Text>
           <Text style={s.tituloText}>{doc.titulo}</Text>
         </View>
 
-        {/* Meta: patient + date */}
         <View style={s.metaBox}>
           <View style={s.metaRow}>
             <Text style={s.metaLabel}>Paciente</Text>
@@ -252,11 +224,9 @@ export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: Doc
           </View>
         </View>
 
-        {/* Content */}
         <Text style={s.sectionLabel}>CONTEÚDO</Text>
         <Text style={s.content}>{doc.conteudo ?? ''}</Text>
 
-        {/* Signature */}
         {prof && (
           <View style={s.signatureWrap}>
             <View style={s.signatureLine} />
@@ -265,7 +235,6 @@ export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: Doc
           </View>
         )}
 
-        {/* Page number */}
         <Text
           style={s.pageNum}
           render={({ pageNumber, totalPages }) =>
