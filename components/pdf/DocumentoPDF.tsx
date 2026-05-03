@@ -1,18 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
-
-// Register all CSS generic/legacy font family names with the full weight matrix so
-// @react-pdf never throws "Could not resolve font" regardless of which weight or style
-// is requested. Using the fonts-array form (same as @react-pdf's own built-in
-// registrations) guarantees every weight/style combination is covered.
-const FULL_HELVETICA_FONTS = [
-  { src: 'Helvetica',           fontWeight: 400 as const, fontStyle: 'normal'  as const },
-  { src: 'Helvetica-Bold',      fontWeight: 700 as const, fontStyle: 'normal'  as const },
-  { src: 'Helvetica-Oblique',   fontWeight: 400 as const, fontStyle: 'italic'  as const },
-  { src: 'Helvetica-BoldOblique', fontWeight: 700 as const, fontStyle: 'italic' as const },
-]
-for (const family of ['Georgia, serif', 'Georgia', 'serif', 'sans-serif', 'monospace', 'system-ui']) {
-  Font.register({ family, fonts: FULL_HELVETICA_FONTS })
-}
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 
 const TEAL = '#0f766e'
 const TEAL_LIGHT = '#f0fdfa'

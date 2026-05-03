@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createElement } from 'react'
-import { renderToBuffer } from '@react-pdf/renderer'
+import { renderToBuffer, Font } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { createClient } from '@/lib/supabase/server'
 import { DocumentoPDF } from '@/components/pdf/DocumentoPDF'
 
 export const runtime = 'nodejs'
+
+// Patch font resolution at module load — makes any unknown family/weight/style
+// fall back to plain Helvetica instead of throwing, eliminating the
+// "Could not resolve font for Georgia, serif" class of errors permanently.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _fontStore = Font as any
+const _origGetFont: (d: unknown) => unknown = _fontStore.getFont.bind(_fontStore)
+_fontStore.getFont = (descriptor: unknown) => {
+  try {
+    return _origGetFont(descriptor)
+  } catch {
+    return _origGetFont({ fontFamily: 'Helvetica', fontWeight: 400, fontStyle: 'normal' })
+  }
+}
 
 export async function GET(
   _req: NextRequest,
