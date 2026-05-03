@@ -136,7 +136,7 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {profile?.role !== 'admin' && (
+          {profile?.role === 'admin' && (
             <ExcluirPacienteButton pacienteId={id} nomePaciente={paciente.nome_completo} />
           )}
           <Link href={`/pacientes/${id}/editar`} className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>

@@ -144,6 +144,13 @@ export async function deletarPaciente(id: string): Promise<ActionResult> {
   } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (profile?.role !== 'admin') return { success: false, error: 'Sem permissão' }
+
   const { error } = await supabase
     .from('pacientes')
     .update({ deleted_at: new Date().toISOString(), atualizado_por: user.id })
