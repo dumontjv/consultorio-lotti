@@ -1,4 +1,12 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
+
+// Mapeia font stacks CSS comuns para fontes built-in do PDFKit.
+// Isso previne "Font family not registered" quando o ambiente resolve
+// alguma herança/variável CSS antes de chegar no renderer.
+Font.register({ family: 'Georgia, serif', src: 'Helvetica' })
+Font.register({ family: 'serif', src: 'Times-Roman' })
+Font.register({ family: 'sans-serif', src: 'Helvetica' })
+Font.register({ family: 'monospace', src: 'Courier' })
 
 const TEAL = '#0f766e'
 const TEAL_LIGHT = '#f0fdfa'
