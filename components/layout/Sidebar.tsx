@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  BellRing,
   FileText,
   DollarSign,
   BookOpen,
@@ -62,6 +63,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/agenda',
     label: 'Agenda',
     icon: Calendar,
+    roles: ['admin', 'medica', 'psicologa', 'secretaria'],
+  },
+  {
+    href: '/lembretes',
+    label: 'Lembretes',
+    icon: BellRing,
     roles: ['admin', 'medica', 'psicologa', 'secretaria'],
   },
   {
