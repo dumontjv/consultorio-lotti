@@ -9,6 +9,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { NovoLancamentoModal } from '@/components/financeiro/NovoLancamentoModal'
+import { AcoesLancamento } from '@/components/financeiro/AcoesLancamento'
 
 interface PageProps {
   searchParams: Promise<{
@@ -285,9 +286,28 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
                         )}
                       </div>
                     </div>
-                    <p className="text-lg font-bold text-slate-800 shrink-0 tabular-nums">
-                      {formatMoeda(l.valor)}
-                    </p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <p className="text-lg font-bold text-slate-800 tabular-nums">
+                        {formatMoeda(l.valor)}
+                      </p>
+                      <AcoesLancamento
+                        lancamento={{
+                          id: l.id,
+                          paciente_id: l.paciente_id,
+                          paciente_nome: pac?.nome_completo ?? '',
+                          profissional_id: l.profissional_id,
+                          tipo: l.tipo,
+                          descricao: l.descricao,
+                          valor: l.valor,
+                          forma_pagamento: l.forma_pagamento,
+                          status: l.status,
+                          data_vencimento: l.data_vencimento,
+                          data_pagamento: l.data_pagamento,
+                          observacoes: l.observacoes,
+                        }}
+                        profissionais={todosProfs ?? []}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

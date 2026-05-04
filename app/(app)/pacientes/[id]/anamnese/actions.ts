@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
@@ -115,9 +116,11 @@ export async function salvarAnamnese(pacienteId: string, values: unknown): Promi
   if (existente) {
     const { error } = await supabase.from('anamnese').update(payload).eq('id', existente.id)
     if (error) return { success: false, error: 'Erro ao salvar anamnese.' }
+    await registrarAuditoria({ acao: 'update', entidade: 'anamnese', entidadeId: existente.id })
   } else {
     const { error } = await supabase.from('anamnese').insert(payload)
     if (error) return { success: false, error: 'Erro ao criar anamnese.' }
+    await registrarAuditoria({ acao: 'create', entidade: 'anamnese', entidadeId: pacienteId })
   }
 
   revalidatePath(`/pacientes/${pacienteId}/anamnese`)
