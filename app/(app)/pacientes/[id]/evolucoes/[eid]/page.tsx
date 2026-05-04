@@ -23,6 +23,14 @@ export default async function EvolucaoDetalhePage({ params }: PageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role === 'secretaria') redirect(`/pacientes/${id}`)
+
   const { data: paciente } = await supabase
     .from('pacientes')
     .select('id, nome_completo')
@@ -37,6 +45,7 @@ export default async function EvolucaoDetalhePage({ params }: PageProps) {
     .select('*')
     .eq('id', eid)
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .single()
 
   if (!ev) notFound()

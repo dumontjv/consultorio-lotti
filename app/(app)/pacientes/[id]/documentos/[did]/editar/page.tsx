@@ -32,6 +32,7 @@ export default async function EditarDocumentoPage({ params }: PageProps) {
     .select('*')
     .eq('id', did)
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .single()
 
   if (!doc) notFound()

@@ -51,6 +51,7 @@ export default async function DocumentosPacientePage({ params }: PageProps) {
     .from('documentos')
     .select('id, tipo, titulo, data_emissao, status, profissional_id, pdf_url')
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .order('data_emissao', { ascending: false })
 
   const { data: profissionais } = await supabase

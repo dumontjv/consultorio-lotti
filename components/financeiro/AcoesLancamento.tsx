@@ -73,11 +73,9 @@ export function AcoesLancamento({ lancamento, profissionais }: AcoesLancamentoPr
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-            <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Ações</span>
-          </Button>
+        <DropdownMenuTrigger className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-accent hover:text-accent-foreground transition-colors">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Ações</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>

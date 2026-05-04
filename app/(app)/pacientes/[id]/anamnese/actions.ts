@@ -95,10 +95,11 @@ export type ActionResult = { success: true } | { success: false; error: string }
 
 export async function salvarAnamnese(pacienteId: string, values: unknown): Promise<ActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile || profile.role === 'secretaria') return { success: false, error: 'Sem permissão' }
 
   const parsed = anamneseSchema.safeParse(values)
   if (!parsed.success) {

@@ -55,6 +55,7 @@ export default async function DocumentosPage({ searchParams }: PageProps) {
       'id, tipo, titulo, data_emissao, status, paciente_id, profissional_id, pdf_url',
       { count: 'exact' }
     )
+    .is('deleted_at', null)
     .order('data_emissao', { ascending: false })
     .range(from, from + PER_PAGE - 1)
 
