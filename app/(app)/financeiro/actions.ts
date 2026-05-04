@@ -12,7 +12,7 @@ const lancamentoSchema = z.object({
   paciente_id: z.string().uuid('Selecione um paciente'),
   profissional_id: z.string().uuid('Selecione um profissional'),
   consulta_id: z.string().uuid().optional().nullable(),
-  tipo: z.enum(['consulta', 'pacote', 'outro']),
+  tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
   descricao: z.string().min(1, 'Descrição obrigatória'),
   valor: z.number().positive('Valor deve ser positivo'),
   forma_pagamento: z.enum([

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { registrarAuditoria } from '@/lib/audit/log'
 import { ChevronRight, Pencil, Stethoscope } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
@@ -49,6 +50,8 @@ export default async function EvolucaoDetalhePage({ params }: PageProps) {
     .single()
 
   if (!ev) notFound()
+
+  void registrarAuditoria({ acao: 'view', entidade: 'evolucoes', entidadeId: eid })
 
   const { data: prof } = await supabase
     .from('profiles')

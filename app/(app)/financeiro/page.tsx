@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { DollarSign, TrendingUp, Clock, CheckCircle, Download } from 'lucide-react'
+import { DollarSign, TrendingUp, Clock, CheckCircle, Download, ArrowDownCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -62,21 +62,26 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
   // Busca resumo financeiro do mês
   const { data: resumoData } = await supabase
     .from('financeiro')
-    .select('valor, status')
+    .select('valor, status, tipo')
     .gte('data_vencimento', dataInicio)
     .lte('data_vencimento', dataFim)
 
-  const totalRecebido = (resumoData ?? [])
+  const ativo = (resumoData ?? []).filter((r) => r.status !== 'cancelado' && r.status !== 'estornado')
+  const receitas = ativo.filter((r) => r.tipo !== 'despesa')
+  const despesas = ativo.filter((r) => r.tipo === 'despesa')
+
+  const totalRecebido = receitas
     .filter((r) => r.status === 'pago')
     .reduce((sum, r) => sum + (r.valor ?? 0), 0)
 
-  const totalPendente = (resumoData ?? [])
+  const totalPendente = receitas
     .filter((r) => r.status === 'pendente')
     .reduce((sum, r) => sum + (r.valor ?? 0), 0)
 
-  const totalMes = (resumoData ?? [])
-    .filter((r) => r.status !== 'cancelado' && r.status !== 'estornado')
+  const totalDespesas = despesas
     .reduce((sum, r) => sum + (r.valor ?? 0), 0)
+
+  const saldoMes = totalRecebido - despesas.filter((r) => r.status === 'pago').reduce((sum, r) => sum + (r.valor ?? 0), 0)
 
   // Busca lançamentos paginados
   let query = supabase
@@ -153,7 +158,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
       </div>
 
       {/* Resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -183,12 +188,27 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <ArrowDownCircle className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Despesas</p>
+                <p className="text-lg font-bold text-rose-700">{formatMoeda(totalDespesas)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                 <TrendingUp className="h-5 w-5 text-slate-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-400">Total do mês</p>
-                <p className="text-lg font-bold text-slate-800">{formatMoeda(totalMes)}</p>
+                <p className="text-xs text-slate-400">Saldo</p>
+                <p className={`text-lg font-bold ${saldoMes >= 0 ? 'text-slate-800' : 'text-rose-700'}`}>
+                  {formatMoeda(saldoMes)}
+                </p>
               </div>
             </div>
           </CardContent>

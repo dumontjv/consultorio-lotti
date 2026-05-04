@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ExcluirPacienteButton } from '@/components/pacientes/ExcluirPacienteButton'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -59,6 +60,8 @@ export default async function PacienteDetalhePage({ params }: PageProps) {
     .single()
 
   if (!paciente) notFound()
+
+  void registrarAuditoria({ acao: 'view', entidade: 'pacientes', entidadeId: id })
 
   const { data: consultas } = await supabase
     .from('consultas')

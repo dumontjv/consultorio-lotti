@@ -31,7 +31,7 @@ import { atualizarLancamento } from '@/app/(app)/financeiro/actions'
 const formSchema = z.object({
   paciente_id: z.string().min(1),
   profissional_id: z.string().min(1, 'Selecione um profissional'),
-  tipo: z.enum(['consulta', 'pacote', 'outro']),
+  tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
   descricao: z.string().min(1, 'Descrição obrigatória'),
   valor: z.string().min(1, 'Valor obrigatório'),
   forma_pagamento: z.enum([
@@ -201,6 +201,7 @@ export function EditarLancamentoModal({
                     <SelectContent>
                       <SelectItem value="consulta">Consulta</SelectItem>
                       <SelectItem value="pacote">Pacote</SelectItem>
+                      <SelectItem value="despesa">Despesa</SelectItem>
                       <SelectItem value="outro">Outro</SelectItem>
                     </SelectContent>
                   </Select>
