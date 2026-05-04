@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { registrarAuditoria } from '@/lib/audit/log'
 import { ChevronRight, ClipboardList } from 'lucide-react'
 import { AnamneseForm } from '@/components/anamnese/AnamneseForm'
 
@@ -19,6 +20,14 @@ export default async function AnamnesePacientePage({ params }: PageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role === 'secretaria') redirect(`/pacientes/${id}`)
+
   const { data: paciente } = await supabase
     .from('pacientes')
     .select('id, nome_completo, genero')
@@ -27,6 +36,8 @@ export default async function AnamnesePacientePage({ params }: PageProps) {
     .single()
 
   if (!paciente) notFound()
+
+  void registrarAuditoria({ acao: 'view', entidade: 'anamnese', entidadeId: id })
 
   const { data: anamnese } = await supabase
     .from('anamnese')

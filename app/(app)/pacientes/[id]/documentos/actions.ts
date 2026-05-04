@@ -75,7 +75,10 @@ export async function deletarDocumento(id: string, pacienteId: string): Promise<
   } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { error } = await supabase.from('documentos').delete().eq('id', id)
+  const { error } = await supabase
+    .from('documentos')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
   if (error) return { success: false, error: 'Erro ao excluir documento.' }
 
   await registrarAuditoria({ acao: 'delete', entidade: 'documentos', entidadeId: id })

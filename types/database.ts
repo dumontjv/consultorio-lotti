@@ -15,7 +15,7 @@ export type ConsultaTipo = 'presencial' | 'teleconsulta'
 export type ConsultaStatus = 'agendada' | 'confirmada' | 'compareceu' | 'faltou' | 'cancelada'
 export type DocumentoTipo = 'receita' | 'laudo' | 'atestado' | 'caso_clinico' | 'solicitacao_exame' | 'relatorio'
 export type DocumentoStatus = 'rascunho' | 'assinado' | 'entregue' | 'cancelado'
-export type FinanceiroTipo = 'consulta' | 'pacote' | 'outro'
+export type FinanceiroTipo = 'consulta' | 'pacote' | 'outro' | 'despesa'
 export type FormaPagamento = 'pix' | 'dinheiro' | 'credito' | 'debito' | 'convenio' | 'transferencia' | 'boleto'
 export type FinanceiroStatus = 'pago' | 'pendente' | 'cancelado' | 'estornado'
 export type PacoteStatus = 'ativo' | 'concluido' | 'cancelado'
@@ -342,6 +342,7 @@ export interface Database {
           cids: string[] | null
           created_at: string
           updated_at: string
+          deleted_at: string | null
         }
         Insert: {
           id?: string
@@ -357,6 +358,7 @@ export interface Database {
           cids?: string[] | null
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Update: {
           id?: string
@@ -372,6 +374,7 @@ export interface Database {
           cids?: string[] | null
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Relationships: []
       }
@@ -391,6 +394,7 @@ export interface Database {
           status: DocumentoStatus
           created_at: string
           updated_at: string
+          deleted_at: string | null
         }
         Insert: {
           id?: string
@@ -406,6 +410,7 @@ export interface Database {
           status?: DocumentoStatus
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Update: {
           id?: string
@@ -421,6 +426,7 @@ export interface Database {
           status?: DocumentoStatus
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Relationships: []
       }

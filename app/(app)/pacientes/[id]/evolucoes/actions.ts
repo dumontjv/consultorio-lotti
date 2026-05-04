@@ -49,12 +49,18 @@ const evolucaoSchema = z.object({
 export type EvolucaoFormValues = z.input<typeof evolucaoSchema>
 export type ActionResult = { success: true; id: string } | { success: false; error: string }
 
+async function verificarAcessoClinico(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile || profile.role === 'secretaria') return null
+  return user
+}
+
 export async function criarEvolucao(values: unknown): Promise<ActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Não autenticado' }
+  const user = await verificarAcessoClinico(supabase)
+  if (!user) return { success: false, error: 'Não autenticado ou sem permissão' }
 
   const parsed = evolucaoSchema.safeParse(values)
   if (!parsed.success) {
@@ -76,10 +82,8 @@ export async function criarEvolucao(values: unknown): Promise<ActionResult> {
 
 export async function atualizarEvolucao(id: string, values: unknown): Promise<ActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Não autenticado' }
+  const user = await verificarAcessoClinico(supabase)
+  if (!user) return { success: false, error: 'Não autenticado ou sem permissão' }
 
   const parsed = evolucaoSchema.safeParse(values)
   if (!parsed.success) {
@@ -96,12 +100,13 @@ export async function atualizarEvolucao(id: string, values: unknown): Promise<Ac
 
 export async function deletarEvolucao(id: string, pacienteId: string): Promise<ActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Não autenticado' }
+  const user = await verificarAcessoClinico(supabase)
+  if (!user) return { success: false, error: 'Não autenticado ou sem permissão' }
 
-  const { error } = await supabase.from('evolucoes').delete().eq('id', id)
+  const { error } = await supabase
+    .from('evolucoes')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
   if (error) return { success: false, error: 'Erro ao excluir evolução.' }
 
   await registrarAuditoria({ acao: 'delete', entidade: 'evolucoes', entidadeId: id })

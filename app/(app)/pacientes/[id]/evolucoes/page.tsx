@@ -22,6 +22,14 @@ export default async function EvolucoesPacientePage({ params }: PageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role === 'secretaria') redirect(`/pacientes/${id}`)
+
   const { data: paciente } = await supabase
     .from('pacientes')
     .select('id, nome_completo')
@@ -35,6 +43,7 @@ export default async function EvolucoesPacientePage({ params }: PageProps) {
     .from('evolucoes')
     .select('id, data, conteudo, hipotese_diagnostica, conduta, cids, profissional_id')
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .order('data', { ascending: false })
 
   const { data: profissionais } = await supabase

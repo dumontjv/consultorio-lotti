@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { registrarAuditoria } from '@/lib/audit/log'
 import { ChevronRight, Download, FileText, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
@@ -53,9 +54,12 @@ export default async function DocumentoDetalhePage({ params }: PageProps) {
     .select('*')
     .eq('id', did)
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .single()
 
   if (!doc) notFound()
+
+  void registrarAuditoria({ acao: 'view', entidade: 'documentos', entidadeId: did })
 
   const { data: prof } = await supabase
     .from('profiles')

@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import {
   LayoutDashboard,
   Users,
+  User,
   Calendar,
   BellRing,
   FileText,
@@ -113,6 +114,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Configurações',
     icon: Settings,
     roles: ['admin'],
+  },
+  {
+    href: '/configuracoes/perfil',
+    label: 'Meu Perfil',
+    icon: User,
+    roles: ['medica', 'psicologa', 'secretaria'],
   },
 ]
 

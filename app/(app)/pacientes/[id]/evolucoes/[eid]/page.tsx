@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { registrarAuditoria } from '@/lib/audit/log'
 import { ChevronRight, Pencil, Stethoscope } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
@@ -23,6 +24,14 @@ export default async function EvolucaoDetalhePage({ params }: PageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role === 'secretaria') redirect(`/pacientes/${id}`)
+
   const { data: paciente } = await supabase
     .from('pacientes')
     .select('id, nome_completo')
@@ -37,9 +46,12 @@ export default async function EvolucaoDetalhePage({ params }: PageProps) {
     .select('*')
     .eq('id', eid)
     .eq('paciente_id', id)
+    .is('deleted_at', null)
     .single()
 
   if (!ev) notFound()
+
+  void registrarAuditoria({ acao: 'view', entidade: 'evolucoes', entidadeId: eid })
 
   const { data: prof } = await supabase
     .from('profiles')

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
@@ -11,7 +12,7 @@ const lancamentoSchema = z.object({
   paciente_id: z.string().uuid('Selecione um paciente'),
   profissional_id: z.string().uuid('Selecione um profissional'),
   consulta_id: z.string().uuid().optional().nullable(),
-  tipo: z.enum(['consulta', 'pacote', 'outro']),
+  tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
   descricao: z.string().min(1, 'Descrição obrigatória'),
   valor: z.number().positive('Valor deve ser positivo'),
   forma_pagamento: z.enum([
@@ -52,6 +53,7 @@ export async function criarLancamento(values: unknown): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao registrar lançamento. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'financeiro', entidadeId: data.id })
   revalidatePath('/financeiro')
   return { success: true, id: data.id }
 }
@@ -71,6 +73,7 @@ export async function atualizarLancamento(id: string, values: unknown): Promise<
   const { error } = await supabase.from('financeiro').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar lançamento. Tente novamente.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'financeiro', entidadeId: id })
   revalidatePath('/financeiro')
   return { success: true, id }
 }
@@ -92,6 +95,7 @@ export async function marcarComoPago(
 
   if (error) return { success: false, error: 'Erro ao registrar pagamento.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'financeiro', entidadeId: id })
   revalidatePath('/financeiro')
   return { success: true, id }
 }
@@ -106,6 +110,7 @@ export async function cancelarLancamento(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('financeiro').update({ status: 'cancelado' }).eq('id', id)
   if (error) return { success: false, error: 'Erro ao cancelar lançamento.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'financeiro', entidadeId: id })
   revalidatePath('/financeiro')
   return { success: true, id }
 }

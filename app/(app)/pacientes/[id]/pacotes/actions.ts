@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { registrarAuditoria } from '@/lib/audit/log'
 
 const pacoteSchema = z.object({
   paciente_id: z.string().uuid(),
@@ -36,6 +37,7 @@ export async function criarPacote(values: unknown): Promise<ActionResult> {
 
   if (error) return { success: false, error: 'Erro ao criar pacote.' }
 
+  await registrarAuditoria({ acao: 'create', entidade: 'pacotes_psicologia', entidadeId: data.id })
   revalidatePath(`/pacientes/${parsed.data.paciente_id}/pacotes`)
   return { success: true, id: data.id }
 }
@@ -71,6 +73,7 @@ export async function registrarSessao(
 
   if (error) return { success: false, error: 'Erro ao registrar sessão.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'pacotes_psicologia', entidadeId: pacoteId })
   revalidatePath(`/pacientes/${pacienteId}/pacotes`)
   return { success: true, id: pacoteId }
 }
@@ -92,6 +95,7 @@ export async function cancelarPacote(
 
   if (error) return { success: false, error: 'Erro ao cancelar pacote.' }
 
+  await registrarAuditoria({ acao: 'update', entidade: 'pacotes_psicologia', entidadeId: pacoteId })
   revalidatePath(`/pacientes/${pacienteId}/pacotes`)
   return { success: true, id: pacoteId }
 }
