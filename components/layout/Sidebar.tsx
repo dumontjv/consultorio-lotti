@@ -119,7 +119,7 @@ const NAV_ITEMS: NavItem[] = [
     href: '/configuracoes/perfil',
     label: 'Meu Perfil',
     icon: User,
-    roles: ['medica', 'psicologa', 'secretaria'],
+    roles: ['admin', 'medica', 'psicologa', 'secretaria'],
   },
 ]
 

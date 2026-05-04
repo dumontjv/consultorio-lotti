@@ -41,6 +41,24 @@ export async function criarConsulta(values: unknown): Promise<ActionResult> {
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' }
   }
 
+  const [{ data: paciente }, { data: profissional }] = await Promise.all([
+    supabase
+      .from('pacientes')
+      .select('id')
+      .eq('id', parsed.data.paciente_id)
+      .is('deleted_at', null)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', parsed.data.profissional_id)
+      .eq('ativo', true)
+      .single(),
+  ])
+
+  if (!paciente) return { success: false, error: 'Paciente não encontrado.' }
+  if (!profissional) return { success: false, error: 'Profissional não encontrado ou inativo.' }
+
   const { data: consulta, error } = await supabase
     .from('consultas')
     .insert({ ...parsed.data, criado_por: user.id, status: 'agendada' })

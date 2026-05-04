@@ -8,8 +8,9 @@ import { registrarAuditoria } from '@/lib/audit/log'
 const opt = (schema: z.ZodString) =>
   schema.optional().transform((v) => v?.trim() || undefined)
 
-const lancamentoSchema = z.object({
-  paciente_id: z.string().uuid('Selecione um paciente'),
+const lancamentoSchema = z
+  .object({
+  paciente_id: z.string().uuid().optional().nullable(),
   profissional_id: z.string().uuid('Selecione um profissional'),
   consulta_id: z.string().uuid().optional().nullable(),
   tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
@@ -28,6 +29,15 @@ const lancamentoSchema = z.object({
   data_vencimento: z.string().min(1, 'Data de vencimento obrigatória'),
   data_pagamento: z.string().optional().nullable(),
   observacoes: opt(z.string()),
+})
+.superRefine((data, ctx) => {
+  if (data.tipo !== 'despesa' && !data.paciente_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Selecione um paciente',
+      path: ['paciente_id'],
+    })
+  }
 })
 
 export type LancamentoFormValues = z.input<typeof lancamentoSchema>

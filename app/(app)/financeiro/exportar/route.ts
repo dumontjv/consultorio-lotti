@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
   const { data: lancamentos, error } = await query
   if (error) return new NextResponse('Erro ao buscar dados', { status: 500 })
 
-  const pacIds = [...new Set((lancamentos ?? []).map((l) => l.paciente_id).filter(Boolean))]
+  const pacIds = [...new Set((lancamentos ?? []).map((l) => l.paciente_id).filter((id): id is string => !!id))]
   const profIds = [...new Set((lancamentos ?? []).map((l) => l.profissional_id).filter(Boolean))]
 
   const [{ data: pacientes }, { data: profissionais }] = await Promise.all([
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       csvEscape(FORMA_LABELS[l.forma_pagamento] ?? l.forma_pagamento),
       venc,
       pgto,
-      csvEscape(pacMap.get(l.paciente_id) ?? ''),
+      csvEscape(l.paciente_id ? (pacMap.get(l.paciente_id) ?? '') : ''),
       csvEscape(profMap.get(l.profissional_id) ?? ''),
       csvEscape(l.observacoes),
     ].join(',')
