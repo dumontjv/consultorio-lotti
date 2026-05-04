@@ -28,8 +28,9 @@ import {
 } from '@/components/ui/select'
 import { atualizarLancamento } from '@/app/(app)/financeiro/actions'
 
-const formSchema = z.object({
-  paciente_id: z.string().min(1),
+const formSchema = z
+  .object({
+  paciente_id: z.string().optional().nullable(),
   profissional_id: z.string().min(1, 'Selecione um profissional'),
   tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
   descricao: z.string().min(1, 'Descrição obrigatória'),
@@ -42,13 +43,22 @@ const formSchema = z.object({
   data_pagamento: z.string().optional(),
   observacoes: z.string().optional(),
 })
+.superRefine((data, ctx) => {
+  if (data.tipo !== 'despesa' && !data.paciente_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Selecione um paciente',
+      path: ['paciente_id'],
+    })
+  }
+})
 
 type FormValues = z.infer<typeof formSchema>
 
 export interface LancamentoParaEditar {
   id: string
-  paciente_id: string
-  paciente_nome: string
+  paciente_id: string | null
+  paciente_nome: string | null
   profissional_id: string
   tipo: string
   descricao: string
@@ -118,6 +128,8 @@ export function EditarLancamentoModal({
   }, [open, lancamento, reset])
 
   const statusSelecionado = watch('status')
+  const tipoSelecionado = watch('tipo')
+  const isDespesa = tipoSelecionado === 'despesa'
   const isLoading = submitting || isPending
 
   async function onSubmit(values: FormValues) {
@@ -150,14 +162,16 @@ export function EditarLancamentoModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
-          {/* Paciente — somente leitura */}
-          <div className="space-y-1">
-            <Label>Paciente</Label>
-            <div className="rounded-lg border border-input bg-muted/30 px-3 py-2">
-              <p className="text-sm font-medium">{lancamento.paciente_nome}</p>
+          {/* Paciente — somente leitura; oculto para despesas */}
+          {!isDespesa && lancamento.paciente_nome && (
+            <div className="space-y-1">
+              <Label>Paciente</Label>
+              <div className="rounded-lg border border-input bg-muted/30 px-3 py-2">
+                <p className="text-sm font-medium">{lancamento.paciente_nome}</p>
+              </div>
             </div>
-            <input type="hidden" {...register('paciente_id')} />
-          </div>
+          )}
+          <input type="hidden" {...register('paciente_id')} />
 
           {/* Profissional */}
           <div className="space-y-1">

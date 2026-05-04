@@ -434,7 +434,7 @@ export interface Database {
       financeiro: {
         Row: {
           id: string
-          paciente_id: string
+          paciente_id: string | null
           profissional_id: string
           consulta_id: string | null
           tipo: FinanceiroTipo
@@ -450,7 +450,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          paciente_id: string
+          paciente_id?: string | null
           profissional_id: string
           consulta_id?: string | null
           tipo?: FinanceiroTipo
@@ -466,7 +466,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          paciente_id?: string
+          paciente_id?: string | null
           profissional_id?: string
           consulta_id?: string | null
           tipo?: FinanceiroTipo

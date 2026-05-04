@@ -61,12 +61,14 @@ export default async function DashboardPage() {
     supabase
       .from('financeiro')
       .select('valor, status')
+      .neq('tipo', 'despesa')
       .gte('data_vencimento', inicioMes)
       .lte('data_vencimento', fimMes),
     supabase
       .from('financeiro')
       .select('valor, status, data_vencimento')
       .eq('status', 'pago')
+      .neq('tipo', 'despesa')
       .gte('data_vencimento', inicio6Meses)
       .lte('data_vencimento', fimMes),
     supabase
@@ -155,7 +157,9 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900">{consultasHoje ?? 0}</div>
-              <p className="text-xs text-slate-400 mt-0.5">agendadas / confirmadas</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {(consultasHoje ?? 0) === 0 ? 'Nenhuma hoje' : 'agendadas / confirmadas'}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -168,7 +172,9 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-slate-900">{totalPacientes ?? 0}</div>
-              <p className="text-xs text-slate-400 mt-0.5">cadastrados</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {(totalPacientes ?? 0) === 0 ? 'Cadastre o primeiro paciente →' : 'cadastrados'}
+              </p>
             </CardContent>
           </Card>
         </Link>

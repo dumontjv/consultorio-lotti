@@ -100,7 +100,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
 
   const { data: lancamentos, count } = await query
 
-  const pacIds = [...new Set((lancamentos ?? []).map((l) => l.paciente_id))]
+  const pacIds = [...new Set((lancamentos ?? []).map((l) => l.paciente_id).filter((id): id is string => !!id))]
   const profIds = [...new Set((lancamentos ?? []).map((l) => l.profissional_id))]
 
   const [{ data: pacientes }, { data: profissionais }] = await Promise.all([
@@ -262,7 +262,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
       ) : (
         <div className="space-y-2">
           {lancamentos.map((l) => {
-            const pac = pacMap.get(l.paciente_id)
+            const pac = l.paciente_id ? pacMap.get(l.paciente_id) : undefined
             const prof = profMap.get(l.profissional_id)
             const st = STATUS_LABELS[l.status] ?? { label: l.status, class: '' }
             return (
@@ -314,7 +314,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
                         lancamento={{
                           id: l.id,
                           paciente_id: l.paciente_id,
-                          paciente_nome: pac?.nome_completo ?? '',
+                          paciente_nome: pac?.nome_completo ?? null,
                           profissional_id: l.profissional_id,
                           tipo: l.tipo,
                           descricao: l.descricao,

@@ -33,8 +33,9 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { criarLancamento } from '@/app/(app)/financeiro/actions'
 
-const formSchema = z.object({
-  paciente_id: z.string().min(1, 'Selecione um paciente'),
+const formSchema = z
+  .object({
+  paciente_id: z.string().optional(),
   profissional_id: z.string().min(1, 'Selecione um profissional'),
   tipo: z.enum(['consulta', 'pacote', 'outro', 'despesa']),
   descricao: z.string().min(1, 'Descrição obrigatória'),
@@ -52,6 +53,15 @@ const formSchema = z.object({
   data_vencimento: z.string().min(1, 'Data de vencimento obrigatória'),
   data_pagamento: z.string().optional(),
   observacoes: z.string().optional(),
+})
+.superRefine((data, ctx) => {
+  if (data.tipo !== 'despesa' && !data.paciente_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Selecione um paciente',
+      path: ['paciente_id'],
+    })
+  }
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -97,6 +107,8 @@ export function NovoLancamentoModal({ profissionais }: NovoLancamentoModalProps)
   })
 
   const statusSelecionado = watch('status')
+  const tipoSelecionado = watch('tipo')
+  const isDespesa = tipoSelecionado === 'despesa'
 
   useEffect(() => {
     if (!open) {
@@ -110,6 +122,15 @@ export function NovoLancamentoModal({ profissionais }: NovoLancamentoModalProps)
       setValue('paciente_id', '')
     }
   }, [open, reset, setValue])
+
+  useEffect(() => {
+    if (isDespesa) {
+      setPacienteSelecionado(null)
+      setBuscaPaciente('')
+      setPacientes([])
+      setValue('paciente_id', undefined)
+    }
+  }, [isDespesa, setValue])
 
   useEffect(() => {
     if (!open) return
@@ -177,67 +198,69 @@ export function NovoLancamentoModal({ profissionais }: NovoLancamentoModalProps)
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
-          {/* Paciente */}
-          <div className="space-y-1">
-            <Label>
-              Paciente <span className="text-destructive">*</span>
-            </Label>
-            {pacienteSelecionado ? (
-              <div className="flex items-center justify-between rounded-lg border border-input bg-muted/30 px-3 py-2">
-                <p className="text-sm font-medium">{pacienteSelecionado.nome_completo}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-7"
-                  onClick={() => {
-                    setPacienteSelecionado(null)
-                    setBuscaPaciente('')
-                  }}
-                >
-                  Trocar
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Digite o nome do paciente..."
-                    value={buscaPaciente}
-                    onChange={(e) => setBuscaPaciente(e.target.value)}
-                    className="pl-8"
-                  />
+          {/* Paciente — oculto para despesas */}
+          {!isDespesa && (
+            <div className="space-y-1">
+              <Label>
+                Paciente <span className="text-destructive">*</span>
+              </Label>
+              {pacienteSelecionado ? (
+                <div className="flex items-center justify-between rounded-lg border border-input bg-muted/30 px-3 py-2">
+                  <p className="text-sm font-medium">{pacienteSelecionado.nome_completo}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => {
+                      setPacienteSelecionado(null)
+                      setBuscaPaciente('')
+                    }}
+                  >
+                    Trocar
+                  </Button>
                 </div>
-                {buscando && <p className="text-xs text-muted-foreground px-1">Buscando...</p>}
-                {pacientes.length > 0 && (
-                  <div className="border border-input rounded-lg overflow-hidden shadow-sm">
-                    {pacientes.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors border-b border-input last:border-0"
-                        onClick={() => {
-                          setPacienteSelecionado(p)
-                          setBuscaPaciente('')
-                          setPacientes([])
-                        }}
-                      >
-                        {p.nome_completo}
-                      </button>
-                    ))}
+              ) : (
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Digite o nome do paciente..."
+                      value={buscaPaciente}
+                      onChange={(e) => setBuscaPaciente(e.target.value)}
+                      className="pl-8"
+                    />
                   </div>
-                )}
-                {buscaPaciente.length >= 2 && pacientes.length === 0 && !buscando && (
-                  <p className="text-xs text-muted-foreground px-1">Nenhum paciente encontrado</p>
-                )}
-              </div>
-            )}
-            <input type="hidden" {...register('paciente_id')} />
-            {errors.paciente_id && (
-              <p className="text-xs text-destructive">{errors.paciente_id.message}</p>
-            )}
-          </div>
+                  {buscando && <p className="text-xs text-muted-foreground px-1">Buscando...</p>}
+                  {pacientes.length > 0 && (
+                    <div className="border border-input rounded-lg overflow-hidden shadow-sm">
+                      {pacientes.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors border-b border-input last:border-0"
+                          onClick={() => {
+                            setPacienteSelecionado(p)
+                            setBuscaPaciente('')
+                            setPacientes([])
+                          }}
+                        >
+                          {p.nome_completo}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {buscaPaciente.length >= 2 && pacientes.length === 0 && !buscando && (
+                    <p className="text-xs text-muted-foreground px-1">Nenhum paciente encontrado</p>
+                  )}
+                </div>
+              )}
+              <input type="hidden" {...register('paciente_id')} />
+              {errors.paciente_id && (
+                <p className="text-xs text-destructive">{errors.paciente_id.message}</p>
+              )}
+            </div>
+          )}
 
           {/* Profissional */}
           <div className="space-y-1">
