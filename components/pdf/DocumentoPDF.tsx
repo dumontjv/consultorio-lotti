@@ -177,7 +177,7 @@ export interface DocumentoPDFProps {
 
 export function DocumentoPDF({ doc, paciente, prof, config, dataFormatada }: DocumentoPDFProps) {
   const tipoLabel = TIPO_LABELS[doc.tipo] ?? doc.tipo.toUpperCase()
-  const nomeConsultorio = config?.consultorio_nome ?? 'Consultório Lotti Fonseca'
+  const nomeConsultorio = config?.consultorio_nome ?? 'Pronto'
 
   const infos: string[] = []
   if (config?.consultorio_endereco) infos.push(config.consultorio_endereco)

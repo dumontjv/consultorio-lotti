@@ -46,7 +46,7 @@ export function ConfiguracoesForm({ config }: ConfiguracoesFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      consultorio_nome: config?.consultorio_nome ?? 'Consultório Lotti Fonseca',
+      consultorio_nome: config?.consultorio_nome ?? '',
       consultorio_endereco: config?.consultorio_endereco ?? '',
       consultorio_celular: config?.consultorio_celular ?? '',
       consultorio_email: config?.consultorio_email ?? '',

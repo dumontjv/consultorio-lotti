@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migration 001: Initial Schema (versão blindada)
--- Consultório Lotti Fonseca - Sistema de Gestão
+-- Pronto — Sistema de Gestão para Clínicas
 -- ============================================================
 
 -- Extensões úteis

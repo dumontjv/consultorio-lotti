@@ -11,8 +11,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Consultório Lotti Fonseca',
-  description: 'Sistema de gestão médica e psicológica',
+  title: 'Pronto',
+  description: 'Sistema de gestão para clínicas e consultórios',
   robots: 'noindex, nofollow',
 }
 

@@ -1,6 +1,6 @@
 // ============================================================
 // Tipos de Domínio da Aplicação
-// Consultório Lotti Fonseca - Sistema de Gestão
+// Pronto — Sistema de Gestão para Clínicas
 // ============================================================
 
 import type {

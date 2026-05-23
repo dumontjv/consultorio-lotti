@@ -18,7 +18,7 @@ function em7DiasStr() {
 
 function mensagemPadrao(pacienteNome: string, data: string, hora: string): string {
   const dataExtenso = format(new Date(data + 'T00:00:00'), "d 'de' MMMM", { locale: ptBR })
-  return `Olá ${pacienteNome}! Lembramos que você tem uma consulta dia ${dataExtenso}, às ${hora}, no Consultório Lotti Fonseca. Qualquer dúvida, estamos à disposição!`
+  return `Olá ${pacienteNome}! Lembramos que você tem uma consulta dia ${dataExtenso}, às ${hora}, no Pronto. Qualquer dúvida, estamos à disposição!`
 }
 
 function agruparPorData<T extends { data: string }>(items: T[]) {

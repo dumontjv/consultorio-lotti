@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migration 003: Supabase Storage Buckets e Policies
--- Consultório Lotti Fonseca - Sistema de Gestão
+-- Pronto — Sistema de Gestão para Clínicas
 -- ============================================================
 
 -- ============================================================

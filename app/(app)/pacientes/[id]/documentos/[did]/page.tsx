@@ -149,7 +149,7 @@ export default async function DocumentoDetalhePage({ params }: PageProps) {
         <div id="documento-print">
           {/* Cabeçalho visível só na impressão */}
           <div className="hidden print:block mb-6 border-b pb-4">
-            <p className="text-lg font-bold">Consultório Lotti Fonseca</p>
+            <p className="text-lg font-bold">Pronto</p>
             <p className="text-sm">{TIPO_LABELS[doc.tipo] ?? doc.tipo} — {doc.titulo}</p>
             <p className="text-sm text-gray-600">
               Paciente: {paciente.nome_completo} | {dataFormatada}

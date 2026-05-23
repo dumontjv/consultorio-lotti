@@ -68,13 +68,13 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-3">
           <Image
             src="/logos/logo-consultorio.svg"
-            alt="Consultório Lotti Fonseca"
+            alt="Pronto"
             width={120}
             height={96}
             priority
           />
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-slate-900">Consultório Lotti Fonseca</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Pronto</h1>
             <p className="text-sm text-slate-500">Sistema de Gestão</p>
           </div>
         </div>

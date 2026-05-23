@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migration 002: Seed CID-10 - Códigos mais comuns
--- Consultório Lotti Fonseca - Medicina Geral e Psicologia
+-- Pronto — Sistema de Gestão para Clínicas
 -- ============================================================
 
 INSERT INTO cid_codigos (versao, codigo, descricao, categoria, capitulo) VALUES

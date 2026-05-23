@@ -195,7 +195,7 @@ export function Sidebar({ userRole, userName, userEmail, userFotoUrl }: SidebarP
                 className="shrink-0"
               />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-sidebar-foreground truncate">Lotti Fonseca</p>
+                <p className="text-sm font-semibold text-sidebar-foreground truncate">Pronto</p>
                 <p className="text-xs text-muted-foreground truncate">Consultório</p>
               </div>
             </div>

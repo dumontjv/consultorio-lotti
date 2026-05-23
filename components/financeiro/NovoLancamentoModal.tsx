@@ -339,7 +339,7 @@ export function NovoLancamentoModal({ profissionais }: NovoLancamentoModalProps)
             </Label>
             <Input
               id="descricao"
-              placeholder="Ex: Consulta clínica — Dr. Lotti"
+              placeholder="Ex: Consulta clínica — Dr. Nome"
               aria-invalid={!!errors.descricao}
               {...register('descricao')}
             />

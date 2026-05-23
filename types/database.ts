@@ -1,6 +1,6 @@
 // ============================================================
 // Tipos gerados para o banco de dados Supabase
-// Consultório Lotti Fonseca - Sistema de Gestão
+// Pronto — Sistema de Gestão para Clínicas
 // ============================================================
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
