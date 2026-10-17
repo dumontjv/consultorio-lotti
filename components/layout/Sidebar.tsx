@@ -26,6 +26,7 @@ import {
   ChevronRight,
   Moon,
   Sun,
+  Stethoscope,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -89,7 +90,7 @@ const NAV_ITEMS: NavItem[] = [
     href: '/relatorios',
     label: 'Relatórios',
     icon: BarChart2,
-    roles: ['admin', 'medica', 'psicologa'],
+    roles: ['admin', 'medica', 'psicologa', 'secretaria'],
   },
   {
     href: '/cid',
@@ -102,6 +103,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Teleconsulta',
     icon: Video,
     roles: ['admin', 'medica', 'psicologa'],
+  },
+  {
+    href: '/profissionais',
+    label: 'Profissionais',
+    icon: Stethoscope,
+    roles: ['admin'],
   },
   {
     href: '/audit-log',

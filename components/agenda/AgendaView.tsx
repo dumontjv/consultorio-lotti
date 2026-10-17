@@ -1,10 +1,10 @@
 'use client'
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useTransition, useCallback } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useTransition, useCallback, useState } from 'react'
 import { format, addDays, subDays, addWeeks, subWeeks, startOfWeek, endOfWeek, isSameDay, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Video, CheckCircle2, XCircle, UserCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Video, CheckCircle2, XCircle, UserCheck, Pencil, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -261,6 +261,8 @@ function ConsultaCard({
   profissionais: Pick<Profile, 'id' | 'nome_completo' | 'role'>[]
   onMudarStatus: (id: string, status: 'agendada' | 'confirmada' | 'compareceu' | 'faltou' | 'cancelada') => void
 }) {
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
+
   const st = STATUS_CONFIG[c.status] ?? STATUS_CONFIG.agendada
   const corBorda = PROFISSIONAL_COLORS[c.profissional.role] ?? 'border-l-slate-300'
   const cancelada = c.status === 'cancelada' || c.status === 'faltou'
@@ -299,39 +301,74 @@ function ConsultaCard({
           {/* Ações rápidas */}
           {!cancelada && (
             <div className="flex items-center gap-1 shrink-0">
-              {c.status === 'agendada' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs border-teal-200 text-teal-700 hover:bg-teal-50"
-                  onClick={() => onMudarStatus(c.id, 'confirmada')}
-                  title="Confirmar"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                  Confirmar
-                </Button>
+              {confirmandoCancelar ? (
+                <>
+                  <span className="flex items-center gap-1 text-xs text-rose-600 font-medium mr-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Cancelar consulta?
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-rose-200 text-rose-600 hover:bg-rose-50"
+                    onClick={() => {
+                      onMudarStatus(c.id, 'cancelada')
+                      setConfirmandoCancelar(false)
+                    }}
+                  >
+                    Sim
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setConfirmandoCancelar(false)}
+                  >
+                    Não
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {c.status === 'agendada' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs border-teal-200 text-teal-700 hover:bg-teal-50"
+                      onClick={() => onMudarStatus(c.id, 'confirmada')}
+                      title="Confirmar"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                      Confirmar
+                    </Button>
+                  )}
+                  {c.status === 'confirmada' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs border-green-200 text-green-700 hover:bg-green-50"
+                      onClick={() => onMudarStatus(c.id, 'compareceu')}
+                      title="Registrar comparecimento"
+                    >
+                      <UserCheck className="h-3.5 w-3.5 mr-1" />
+                      Compareceu
+                    </Button>
+                  )}
+                  <NovaConsultaModal
+                    profissionais={profissionais}
+                    consulta={c}
+                    triggerVariant="icon"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                    onClick={() => setConfirmandoCancelar(true)}
+                    title="Cancelar consulta"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
-              {c.status === 'confirmada' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs border-green-200 text-green-700 hover:bg-green-50"
-                  onClick={() => onMudarStatus(c.id, 'compareceu')}
-                  title="Registrar comparecimento"
-                >
-                  <UserCheck className="h-3.5 w-3.5 mr-1" />
-                  Compareceu
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                onClick={() => onMudarStatus(c.id, 'cancelada')}
-                title="Cancelar"
-              >
-                <XCircle className="h-3.5 w-3.5" />
-              </Button>
             </div>
           )}
         </div>

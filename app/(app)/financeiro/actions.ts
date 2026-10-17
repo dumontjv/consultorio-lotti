@@ -90,7 +90,8 @@ export async function atualizarLancamento(id: string, values: unknown): Promise<
 
 export async function marcarComoPago(
   id: string,
-  data_pagamento: string
+  data_pagamento: string,
+  forma_pagamento?: string
 ): Promise<ActionResult> {
   const supabase = await createClient()
   const {
@@ -98,10 +99,13 @@ export async function marcarComoPago(
   } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { error } = await supabase
-    .from('financeiro')
-    .update({ status: 'pago', data_pagamento })
-    .eq('id', id)
+  const update = {
+    status: 'pago' as const,
+    data_pagamento,
+    ...(forma_pagamento ? { forma_pagamento: forma_pagamento as Parameters<typeof supabase.from>[0] extends never ? never : 'pix' | 'dinheiro' | 'credito' | 'debito' | 'convenio' | 'transferencia' | 'boleto' } : {}),
+  }
+
+  const { error } = await supabase.from('financeiro').update(update).eq('id', id)
 
   if (error) return { success: false, error: 'Erro ao registrar pagamento.' }
 

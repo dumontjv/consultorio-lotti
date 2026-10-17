@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { RelatoriosFiltros } from '@/components/relatorios/RelatoriosFiltros'
 import { BarChart2, Download, Users, CalendarCheck, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { GraficoReceita, type DadosMes } from '@/components/relatorios/GraficoReceita'
 
 export const dynamic = 'force-dynamic'
 
@@ -159,6 +160,32 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
     if (l.status === 'pago') { entry.pago += l.valor; totalPago += l.valor }
     else if (l.status === 'pendente') { entry.pendente += l.valor; totalPendente += l.valor }
   }
+
+  // ── Gráfico de receita (últimos 6 meses) ─────────────────────────────────
+  const hoje = new Date()
+  const { data: graficoRaw } = await supabase
+    .from('financeiro')
+    .select('valor, status, data_vencimento, tipo')
+    .gte('data_vencimento', format(startOfMonth(subMonths(hoje, 5)), 'yyyy-MM-dd'))
+    .lte('data_vencimento', format(endOfMonth(hoje), 'yyyy-MM-dd'))
+
+  const mesesMap = new Map<string, DadosMes>()
+  for (let i = 5; i >= 0; i--) {
+    const d = subMonths(hoje, i)
+    mesesMap.set(format(d, 'yyyy-MM'), {
+      mes: format(d, 'MMM/yy', { locale: ptBR }),
+      recebido: 0,
+      pendente: 0,
+    })
+  }
+  for (const f of graficoRaw ?? []) {
+    if (!f.data_vencimento || f.tipo === 'despesa') continue
+    const entry = mesesMap.get(f.data_vencimento.slice(0, 7))
+    if (!entry) continue
+    if (f.status === 'pago') entry.recebido += f.valor ?? 0
+    else if (f.status === 'pendente') entry.pendente += f.valor ?? 0
+  }
+  const dadosMensais = Array.from(mesesMap.values())
 
   // ── URL helpers ───────────────────────────────────────────────────────────
   const csvParams = `?periodo=${periodo}${profissionalId !== 'todos' ? `&profissional=${profissionalId}` : ''}`
@@ -384,6 +411,15 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Receita — últimos 6 meses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GraficoReceita dados={dadosMensais} />
+            </CardContent>
+          </Card>
 
           {finPorProf.size > 0 ? (
             <Card>

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Users, Plus, Phone, User } from 'lucide-react'
+import { Users, Plus, Phone, User, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -67,10 +67,20 @@ export default async function PacientesPage({ searchParams }: PageProps) {
             {count ?? 0} paciente{(count ?? 0) !== 1 ? 's' : ''} cadastrado{(count ?? 0) !== 1 ? 's' : ''}
           </p>
         </div>
-        <Link href="/pacientes/novo" className={cn(buttonVariants())}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Novo paciente
-        </Link>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/exportar/pacientes${busca || filtro ? `?busca=${busca ?? ''}&profissional=${filtro ?? ''}` : ''}`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            title="Exportar lista de pacientes em CSV"
+          >
+            <Download className="h-4 w-4 mr-1.5" />
+            CSV
+          </a>
+          <Link href="/pacientes/novo" className={cn(buttonVariants())}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Novo paciente
+          </Link>
+        </div>
       </div>
 
       {/* Busca e filtros */}
