@@ -153,6 +153,13 @@ export default async function FinanceiroPage({ searchParams }: PageProps) {
             <Download className="h-4 w-4 mr-1.5" />
             Exportar CSV
           </a>
+          <a
+            href={`/api/exportar/financeiro?mes=${mesParam}${statusFiltro ? `&status=${statusFiltro}` : ''}`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            <Download className="h-4 w-4 mr-1.5" />
+            Exportar financeiro
+          </a>
           <NovoLancamentoModal profissionais={todosProfs ?? []} />
         </div>
       </div>
