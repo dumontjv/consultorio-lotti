@@ -109,6 +109,7 @@ export interface Database {
           convenio_nome: string | null
           convenio_codigo: string | null
           convenio_validade: string | null
+          convenio_id: string | null
           atendido_por_medica: boolean
           atendido_por_psicologa: boolean
           primeira_consulta_em: string | null
@@ -149,6 +150,7 @@ export interface Database {
           convenio_nome?: string | null
           convenio_codigo?: string | null
           convenio_validade?: string | null
+          convenio_id?: string | null
           atendido_por_medica?: boolean
           atendido_por_psicologa?: boolean
           primeira_consulta_em?: string | null
@@ -188,6 +190,7 @@ export interface Database {
           convenio_nome?: string | null
           convenio_codigo?: string | null
           convenio_validade?: string | null
+          convenio_id?: string | null
           atendido_por_medica?: boolean
           atendido_por_psicologa?: boolean
           primeira_consulta_em?: string | null
@@ -305,6 +308,9 @@ export interface Database {
           solicitante_nome: string | null
           solicitante_telefone: string | null
           solicitante_email: string | null
+          convenio_id: string
+          numero_carteirinha: string | null
+          numero_guia: string | null
           created_at: string
           updated_at: string
         }
@@ -327,6 +333,9 @@ export interface Database {
           solicitante_nome?: string | null
           solicitante_telefone?: string | null
           solicitante_email?: string | null
+          convenio_id: string
+          numero_carteirinha?: string | null
+          numero_guia?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -349,6 +358,9 @@ export interface Database {
           solicitante_nome?: string | null
           solicitante_telefone?: string | null
           solicitante_email?: string | null
+          convenio_id?: string
+          numero_carteirinha?: string | null
+          numero_guia?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -474,6 +486,7 @@ export interface Database {
           data_pagamento: string | null
           observacoes: string | null
           registrado_por: string | null
+          convenio_id: string | null
           created_at: string
         }
         Insert: {
@@ -490,6 +503,7 @@ export interface Database {
           data_pagamento?: string | null
           observacoes?: string | null
           registrado_por?: string | null
+          convenio_id?: string | null
           created_at?: string
         }
         Update: {
@@ -506,6 +520,7 @@ export interface Database {
           data_pagamento?: string | null
           observacoes?: string | null
           registrado_por?: string | null
+          convenio_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -578,6 +593,59 @@ export interface Database {
           descricao?: string
           categoria?: string | null
           capitulo?: string | null
+        }
+        Relationships: []
+      }
+
+      convenios: {
+        Row: {
+          id: string
+          nome: string
+          ativo: boolean
+          particular: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          ativo?: boolean
+          particular?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          ativo?: boolean
+          particular?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+
+      convenio_profissional: {
+        Row: {
+          convenio_id: string
+          profissional_id: string
+          valor_particular_padrao: number | null
+          valor_primeira_consulta: number | null
+          valor_repasse: number | null
+          created_at: string
+        }
+        Insert: {
+          convenio_id: string
+          profissional_id: string
+          valor_particular_padrao?: number | null
+          valor_primeira_consulta?: number | null
+          valor_repasse?: number | null
+          created_at?: string
+        }
+        Update: {
+          convenio_id?: string
+          profissional_id?: string
+          valor_particular_padrao?: number | null
+          valor_primeira_consulta?: number | null
+          valor_repasse?: number | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -719,9 +787,20 @@ export interface Database {
           p_cpf: string | null
           p_motivo: string
           p_ip_hash: string
+          p_convenio_id: string
+          p_numero_carteirinha: string | null
           p_limite_por_hora?: number
         }
         Returns: { id_consulta: string; numero_protocolo: string }[]
+      }
+      valor_sugerido_consulta: {
+        Args: {
+          p_profissional_id: string
+          p_convenio_id: string
+          p_paciente_id: string | null
+          p_ignorar_consulta_id?: string | null
+        }
+        Returns: number | null
       }
     }
 

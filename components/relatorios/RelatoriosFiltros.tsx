@@ -15,6 +15,9 @@ interface RelatoriosFiltrosProps {
   periodoAtual: string
   profissionalAtual: string
   mostrarProfissional?: boolean
+  convenios: Array<{ id: string; nome: string }>
+  convenioAtual: string
+  mostrarConvenio?: boolean
 }
 
 const PERIODOS = [
@@ -31,6 +34,9 @@ export function RelatoriosFiltros({
   periodoAtual,
   profissionalAtual,
   mostrarProfissional = true,
+  convenios,
+  convenioAtual,
+  mostrarConvenio = true,
 }: RelatoriosFiltrosProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -47,9 +53,11 @@ export function RelatoriosFiltros({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Select value={periodoAtual} onValueChange={(v) => v && atualizar('periodo', v)}>
+      <Select value={periodoAtual} onValueChange={(v) => v && atualizar('periodo', String(v))}>
         <SelectTrigger className="w-44">
-          <SelectValue placeholder="Período" />
+          <SelectValue placeholder="Período">
+            {(v: string) => PERIODOS.find((p) => p.value === v)?.label ?? 'Período'}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {PERIODOS.map((p) => (
@@ -61,15 +69,37 @@ export function RelatoriosFiltros({
       </Select>
 
       {mostrarProfissional && (
-        <Select value={profissionalAtual} onValueChange={(v) => v && atualizar('profissional', v)}>
+        <Select value={profissionalAtual} onValueChange={(v) => v && atualizar('profissional', String(v))}>
           <SelectTrigger className="w-52">
-            <SelectValue placeholder="Profissional" />
+            <SelectValue placeholder="Profissional">
+              {(v: string) =>
+                profissionais.find((p) => p.id === v)?.nome_completo ?? 'Todos os profissionais'
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os profissionais</SelectItem>
             {profissionais.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.nome_completo}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {mostrarConvenio && (
+        <Select value={convenioAtual} onValueChange={(v) => v && atualizar('convenio', String(v))}>
+          <SelectTrigger className="w-44" aria-label="Convênio">
+            <SelectValue placeholder="Convênio">
+              {(v: string) => convenios.find((c) => c.id === v)?.nome ?? 'Todos os convênios'}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os convênios</SelectItem>
+            {convenios.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.nome}
               </SelectItem>
             ))}
           </SelectContent>

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { PacienteForm } from '@/components/pacientes/PacienteForm'
+import { carregarConvenios } from '@/lib/convenios/servidor'
 
 export default async function NovoPacientePage() {
   const supabase = await createClient()
@@ -29,7 +30,7 @@ export default async function NovoPacientePage() {
         </p>
       </div>
 
-      <PacienteForm modo="criar" />
+      <PacienteForm modo="criar" convenios={await carregarConvenios(supabase)} />
     </div>
   )
 }

@@ -29,13 +29,20 @@ import {
   type AgendamentoResult,
 } from '@/app/agendar/actions'
 
+interface ConvenioPublico {
+  id: string
+  nome: string
+  particular: boolean
+}
+
 interface ProfissionalPublico {
   id: string
   nome_completo: string
   role: 'medica' | 'psicologa'
+  convenios: ConvenioPublico[]
 }
 
-type Etapa = 'profissional' | 'horario' | 'dados' | 'confirmado'
+type Etapa = 'profissional' | 'convenio' | 'horario' | 'dados' | 'confirmado'
 
 const ROLE_LABEL = { medica: 'Médica', psicologa: 'Psicóloga' }
 const DIAS_SEMANA_CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -67,6 +74,8 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
   const [duracao, setDuracao] = useState(0)
   const [data, setData] = useState<string | null>(null)
   const [hora, setHora] = useState<string | null>(null)
+  const [convenioId, setConvenioId] = useState<string | null>(null)
+  const [carteirinha, setCarteirinha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [confirmacao, setConfirmacao] = useState<Extract<AgendamentoResult, { success: true }> | null>(null)
   const [carregando, startTransition] = useTransition()
@@ -99,9 +108,30 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
     })
   }
 
+  const convenio = profissional?.convenios.find((c) => c.id === convenioId) ?? null
+  const temEscolhaDeConvenio = (profissional?.convenios.length ?? 0) > 1
+
   function escolherProfissional(p: ProfissionalPublico) {
     setProfissional(p)
-    carregarHorarios(p)
+    setCarteirinha('')
+    setErro(null)
+    // Só Particular disponível: não há o que escolher
+    if (p.convenios.length === 1) {
+      setConvenioId(p.convenios[0].id)
+      carregarHorarios(p)
+      return
+    }
+    setConvenioId(p.convenios.find((c) => c.particular)?.id ?? null)
+    setEtapa('convenio')
+  }
+
+  function confirmarConvenio() {
+    if (!profissional || !convenio) return
+    if (!convenio.particular && !carteirinha.trim()) {
+      setErro('Informe o número da carteirinha do convênio.')
+      return
+    }
+    carregarHorarios(profissional, true)
   }
 
   function enviar(e: React.FormEvent) {
@@ -115,6 +145,8 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
         hora,
         ...form,
         cpf: form.cpf || undefined,
+        convenio_id: convenioId,
+        numero_carteirinha: convenio?.particular ? undefined : carteirinha,
       })
       if (!r.success) {
         setErro(r.error)
@@ -154,6 +186,12 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
               <span className="text-muted-foreground">Profissional: </span>
               {confirmacao.profissional}
             </p>
+            {convenio && (
+              <p className="text-sm">
+                <span className="text-muted-foreground">Atendimento: </span>
+                {convenio.nome}
+              </p>
+            )}
           </div>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
             Guarde o número do protocolo. Se precisar falar com a clínica, ligue{' '}
@@ -224,10 +262,73 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
         </section>
       )}
 
-      {etapa === 'horario' && profissional && (
+      {etapa === 'convenio' && profissional && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon-sm" onClick={() => setEtapa('profissional')} aria-label="Voltar">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold">Particular ou convênio?</h1>
+              <p className="text-xs text-muted-foreground">
+                Planos aceitos por {profissional.nome_completo}
+              </p>
+            </div>
+          </div>
+
+          <div role="radiogroup" aria-label="Forma de atendimento" className="grid sm:grid-cols-2 gap-2">
+            {profissional.convenios.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={convenioId === c.id}
+                onClick={() => {
+                  setConvenioId(c.id)
+                  setErro(null)
+                }}
+                className={cn(
+                  'rounded-lg border bg-card px-4 py-3 text-left text-sm transition-colors',
+                  convenioId === c.id ? 'border-primary ring-2 ring-primary/20 font-medium' : 'hover:border-primary'
+                )}
+              >
+                {c.nome}
+                {c.particular && <span className="block text-xs text-muted-foreground font-normal">Sem plano de saúde</span>}
+              </button>
+            ))}
+          </div>
+
+          {convenio && !convenio.particular && (
+            <div className="space-y-1.5 max-w-sm">
+              <Label htmlFor="carteirinha">Nº da carteirinha do {convenio.nome} *</Label>
+              <Input
+                id="carteirinha"
+                inputMode="text"
+                maxLength={60}
+                value={carteirinha}
+                onChange={(e) => setCarteirinha(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <Button disabled={!convenio || carregando} onClick={confirmarConvenio}>
+              {carregando && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Continuar
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {etapa === 'horario' && profissional && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setEtapa(temEscolhaDeConvenio ? 'convenio' : 'profissional')}
+              aria-label="Voltar"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -305,6 +406,7 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
               <p className="text-xs text-muted-foreground capitalize flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {dataExtenso(data)} às {hora} · {profissional.nome_completo}
+                {convenio && ` · ${convenio.nome}`}
               </p>
             </div>
           </div>
@@ -417,6 +519,7 @@ export function AgendamentoWizard({ profissionais }: { profissionais: Profission
 function Passos({ etapa }: { etapa: Etapa }) {
   const passos: { id: Etapa; label: string }[] = [
     { id: 'profissional', label: 'Profissional' },
+    { id: 'convenio', label: 'Convênio' },
     { id: 'horario', label: 'Data e horário' },
     { id: 'dados', label: 'Seus dados' },
   ]

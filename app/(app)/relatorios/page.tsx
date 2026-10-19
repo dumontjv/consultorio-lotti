@@ -3,6 +3,7 @@ import { resolverPeriodo } from '@/lib/relatorios/periodo'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { RelatoriosFiltros } from '@/components/relatorios/RelatoriosFiltros'
+import { resolverFiltroConvenio, filtrarFinanceiroPorConvenio } from '@/lib/relatorios/convenio'
 import { BarChart2, Download, Users, CalendarCheck, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
@@ -16,6 +17,7 @@ interface PageProps {
     tab?: string
     periodo?: string
     profissional?: string
+    convenio?: string
   }>
 }
 
@@ -57,15 +59,27 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
 
   const profs = profissionais ?? []
 
+  const { data: conveniosRaw } = await supabase
+    .from('convenios')
+    .select('id, nome, particular')
+    .order('particular', { ascending: false })
+    .order('nome')
+  const convenios = conveniosRaw ?? []
+  const convenioFiltro = resolverFiltroConvenio(params.convenio, convenios)
+  const convenioParam = convenioFiltro?.id ?? 'todos'
+
   // ── Dados de Atendimentos ─────────────────────────────────────────────────
   let consultasQuery = supabase
     .from('consultas')
-    .select('id, data, hora_inicio, status, tipo, profissional_id, profiles!inner(nome_completo)')
+    .select('id, data, hora_inicio, status, tipo, profissional_id, profiles!profissional_id!inner(nome_completo)')
     .gte('data', inicio)
     .lte('data', fim)
 
   if (profissionalId !== 'todos') {
     consultasQuery = consultasQuery.eq('profissional_id', profissionalId)
+  }
+  if (convenioFiltro) {
+    consultasQuery = consultasQuery.eq('convenio_id', convenioFiltro.id)
   }
 
   const { data: consultasRaw } = await consultasQuery
@@ -130,13 +144,14 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
   // ── Dados Financeiros ─────────────────────────────────────────────────────
   let finQuery = supabase
     .from('financeiro')
-    .select('id, valor, status, profissional_id, profiles!inner(nome_completo)')
+    .select('id, valor, status, profissional_id, profiles!profissional_id!inner(nome_completo)')
     .gte('data_vencimento', inicio)
     .lte('data_vencimento', fim)
 
   if (profissionalId !== 'todos') {
     finQuery = finQuery.eq('profissional_id', profissionalId)
   }
+  finQuery = filtrarFinanceiroPorConvenio(finQuery, convenioFiltro)
 
   const { data: finRaw } = await finQuery
   const lancamentos = (finRaw ?? []) as unknown as Array<{
@@ -188,7 +203,7 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
   const dadosMensais = Array.from(mesesMap.values())
 
   // ── URL helpers ───────────────────────────────────────────────────────────
-  const csvParams = `?periodo=${periodo}${profissionalId !== 'todos' ? `&profissional=${profissionalId}` : ''}`
+  const csvParams = `?periodo=${periodo}${profissionalId !== 'todos' ? `&profissional=${profissionalId}` : ''}${convenioFiltro ? `&convenio=${convenioFiltro.id}` : ''}`
 
   const labelPeriodo = {
     '1m': 'este mês', mes_passado: 'mês passado', '3m': 'últimos 3 meses',
@@ -207,12 +222,18 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
           <p className="text-sm text-muted-foreground mt-1">
             Período: <span className="font-medium">{labelPeriodo}</span>
             {' · '}{inicio} até {fim}
+            {convenioFiltro && tab !== 'pacientes' && (
+              <> · Convênio: <span className="font-medium">{convenioFiltro.nome}</span></>
+            )}
           </p>
         </div>
         <RelatoriosFiltros
           profissionais={profs}
           periodoAtual={periodo}
           profissionalAtual={profissionalId}
+          convenios={convenios}
+          convenioAtual={convenioParam}
+          mostrarConvenio={tab !== 'pacientes'}
           mostrarProfissional={tab !== 'pacientes'}
         />
       </div>
@@ -229,7 +250,7 @@ export default async function RelatoriosPage({ searchParams }: PageProps) {
             {tabs.map(({ value, label, icon: Icon }) => (
               <a
                 key={value}
-                href={`/relatorios?tab=${value}&periodo=${periodo}&profissional=${profissionalId}`}
+                href={`/relatorios?tab=${value}&periodo=${periodo}&profissional=${profissionalId}&convenio=${convenioParam}`}
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                   tab === value

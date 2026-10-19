@@ -37,7 +37,7 @@ export default async function LembretesPage() {
       .select(`
         id, data, hora_inicio, status, tipo,
         paciente:pacientes(id, nome_completo, telefone_principal),
-        profissional:profiles(nome_completo),
+        profissional:profiles!profissional_id(nome_completo),
         lembretes(id, status, canal, enviado_em)
       `)
       .gte('data', hojeStr())

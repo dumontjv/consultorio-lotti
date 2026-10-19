@@ -20,6 +20,7 @@ import {
   Video,
   Settings,
   ShieldCheck,
+  HeartHandshake,
   LogOut,
   Menu,
   X,
@@ -120,6 +121,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/configuracoes',
     label: 'Configurações',
     icon: Settings,
+    roles: ['admin'],
+  },
+  {
+    href: '/configuracoes/convenios',
+    label: 'Convênios',
+    icon: HeartHandshake,
     roles: ['admin'],
   },
   {

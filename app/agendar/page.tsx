@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AgendamentoWizard } from '@/components/agendar/AgendamentoWizard'
 import { TELEFONES_CLINICA } from '@/lib/agendamento/contato'
+import { carregarConvenios } from '@/lib/convenios/servidor'
+import { conveniosAceitos } from '@/lib/convenios/regras'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
 export default async function AgendarPage() {
   const admin = createAdminClient()
 
-  const [{ data: profissionais }, { data: config }] = await Promise.all([
+  const [{ data: profissionais }, { data: config }, convenios] = await Promise.all([
     admin
       .from('profiles')
       .select('id, nome_completo, role')
@@ -23,6 +25,7 @@ export default async function AgendarPage() {
       .not('disponibilidade', 'is', null)
       .order('nome_completo'),
     admin.from('configuracoes').select('consultorio_nome').eq('id', 1).maybeSingle(),
+    carregarConvenios(admin),
   ])
 
   const nomeClinica = config?.consultorio_nome || 'Pronto'
@@ -45,7 +48,13 @@ export default async function AgendarPage() {
             id: p.id,
             nome_completo: p.nome_completo,
             role: p.role as 'medica' | 'psicologa',
-          }))}
+            // Só nome e tipo: valores e repasses não vão para a página pública
+            convenios: conveniosAceitos(convenios, p.id).map((c) => ({
+              id: c.id,
+              nome: c.nome,
+              particular: c.particular,
+            })),
+          })).filter((p) => p.convenios.length > 0)}
         />
       </main>
 

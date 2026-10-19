@@ -41,7 +41,12 @@ const pacienteSchema = z.object({
     .transform((v) => v?.trim() || undefined)
     .refine((v) => !v || v.length === 2, { message: 'UF deve ter 2 letras' }),
   endereco_cep: opt(),
-  convenio_nome: opt(),
+  convenio_id: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => v || null)
+    .refine((v) => v === null || z.string().uuid().safeParse(v).success, 'Convênio inválido'),
   convenio_codigo: opt(),
   convenio_validade: opt(),
   atendido_por_medica: z.boolean().default(false),
@@ -55,6 +60,17 @@ const pacienteSchema = z.object({
 
 export type PacienteFormValues = z.input<typeof pacienteSchema>
 export type ActionResult = { success: true; id: string } | { success: false; error: string }
+
+/** O nome em texto (convenio_nome) acompanha o convenio_id para as telas antigas. */
+async function nomeDoConvenio(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  convenioId: string | null
+): Promise<{ ok: true; nome: string | null } | { ok: false; error: string }> {
+  if (!convenioId) return { ok: true, nome: null }
+  const { data } = await supabase.from('convenios').select('nome').eq('id', convenioId).maybeSingle()
+  if (!data) return { ok: false, error: 'Convênio não encontrado.' }
+  return { ok: true, nome: data.nome }
+}
 
 export async function criarPaciente(values: unknown): Promise<ActionResult> {
   const supabase = await createClient()
@@ -77,10 +93,14 @@ export async function criarPaciente(values: unknown): Promise<ActionResult> {
   }
   if (data.endereco_cep) data.endereco_cep = data.endereco_cep.replace(/\D/g, '')
 
+  const convenio = await nomeDoConvenio(supabase, data.convenio_id)
+  if (!convenio.ok) return { success: false, error: convenio.error }
+
   const { data: paciente, error } = await supabase
     .from('pacientes')
     .insert({
       ...data,
+      convenio_nome: convenio.nome,
       criado_por: user.id,
       atualizado_por: user.id,
       consentimento_lgpd_data: new Date().toISOString(),
@@ -119,9 +139,12 @@ export async function atualizarPaciente(id: string, values: unknown): Promise<Ac
   }
   if (data.endereco_cep) data.endereco_cep = data.endereco_cep.replace(/\D/g, '')
 
+  const convenio = await nomeDoConvenio(supabase, data.convenio_id)
+  if (!convenio.ok) return { success: false, error: convenio.error }
+
   const { error } = await supabase
     .from('pacientes')
-    .update({ ...data, atualizado_por: user.id })
+    .update({ ...data, convenio_nome: convenio.nome, atualizado_por: user.id })
     .eq('id', id)
     .is('deleted_at', null)
 

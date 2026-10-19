@@ -252,6 +252,7 @@ export interface Paciente {
 
   // Convênio
   convenio_nome: string | null
+  convenio_id: string | null
   convenio_codigo: string | null
   convenio_validade: string | null
 
@@ -340,6 +341,9 @@ export interface Consulta {
   observacoes: string | null
   link_teleconsulta: string | null
   criado_por: string | null
+  convenio_id: string
+  numero_carteirinha: string | null
+  numero_guia: string | null
   created_at: string
   updated_at: string
 }

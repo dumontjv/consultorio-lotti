@@ -48,7 +48,7 @@ const formSchema = z.object({
   endereco_cidade: z.string().optional(),
   endereco_uf: z.string().optional(),
   endereco_cep: z.string().optional(),
-  convenio_nome: z.string().optional(),
+  convenio_id: z.string().optional(),
   convenio_codigo: z.string().optional(),
   convenio_validade: z.string().optional(),
   atendido_por_medica: z.boolean(),
@@ -63,12 +63,14 @@ type FormValues = z.infer<typeof formSchema>
 interface PacienteFormProps {
   paciente?: Paciente
   modo: 'criar' | 'editar'
+  convenios: { id: string; nome: string; ativo: boolean }[]
 }
 
 const inputClass =
   'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm'
 
-export function PacienteForm({ paciente, modo }: PacienteFormProps) {
+export function PacienteForm({ paciente, modo, convenios }: PacienteFormProps) {
+  const opcoesConvenio = convenios.filter((c) => c.ativo || c.id === paciente?.convenio_id)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [submitting, setSubmitting] = useState(false)
@@ -105,7 +107,7 @@ export function PacienteForm({ paciente, modo }: PacienteFormProps) {
           endereco_cep: paciente.endereco_cep
             ? paciente.endereco_cep.replace(/(\d{5})(\d{3})/, '$1-$2')
             : '',
-          convenio_nome: paciente.convenio_nome ?? '',
+          convenio_id: paciente.convenio_id ?? '',
           convenio_codigo: paciente.convenio_codigo ?? '',
           convenio_validade: paciente.convenio_validade ?? '',
           atendido_por_medica: paciente.atendido_por_medica,
@@ -414,25 +416,32 @@ export function PacienteForm({ paciente, modo }: PacienteFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Convênio */}
           <div className="space-y-1">
-            <Label htmlFor="convenio_nome">Convênio</Label>
+            <Label htmlFor="convenio_id">Convênio</Label>
             <Controller
               control={control}
-              name="convenio_nome"
+              name="convenio_id"
               render={({ field }) => (
-                <Select value={field.value ?? ''} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Particular ou convênio" />
+                <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(String(v ?? ''))}>
+                  <SelectTrigger id="convenio_id" className="w-full">
+                    <SelectValue placeholder="Particular ou convênio">
+                      {(v: string) => convenios.find((c) => c.id === v)?.nome ?? 'Particular ou convênio'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Particular">Particular</SelectItem>
-                    <SelectItem value="Amil">Amil</SelectItem>
-                    <SelectItem value="Petrobras">Petrobras</SelectItem>
-                    <SelectItem value="Unimed">Unimed</SelectItem>
-                    <SelectItem value="Outro">Outro</SelectItem>
+                    {opcoesConvenio.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               )}
             />
+            {paciente?.convenio_nome && !paciente.convenio_id && (
+              <p className="text-xs text-amber-700">
+                Convênio anterior: {paciente.convenio_nome}. Selecione o correspondente da lista.
+              </p>
+            )}
           </div>
 
           {/* Código do convênio */}

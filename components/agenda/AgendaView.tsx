@@ -14,12 +14,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { NovaConsultaModal } from './NovaConsultaModal'
 import { atualizarStatusConsulta } from '@/app/(app)/agenda/actions'
 import type { ConsultaDetalhada, Profile } from '@/types/domain'
+import type { ConvenioComRegras } from '@/lib/convenios/regras'
+import { ConveniosProvider, useConvenios } from './ConveniosContext'
 
 interface AgendaViewProps {
   consultas: ConsultaDetalhada[]
   profissionais: Pick<Profile, 'id' | 'nome_completo' | 'role'>[]
   dataAtual: string
   modo: 'dia' | 'semana'
+  convenios: ConvenioComRegras[]
 }
 
 const STATUS_CONFIG = {
@@ -38,7 +41,7 @@ const PROFISSIONAL_COLORS: Record<string, string> = {
   admin: 'border-l-slate-400',
 }
 
-export function AgendaView({ consultas, profissionais, dataAtual, modo }: AgendaViewProps) {
+export function AgendaView({ consultas, profissionais, dataAtual, modo, convenios }: AgendaViewProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
@@ -86,6 +89,7 @@ export function AgendaView({ consultas, profissionais, dataAtual, modo }: Agenda
       toast.error(result.error)
     } else {
       toast.success('Status atualizado')
+      if (result.aviso) toast.warning(result.aviso, { duration: 10000 })
       startTransition(() => router.refresh())
     }
   }
@@ -104,6 +108,7 @@ export function AgendaView({ consultas, profissionais, dataAtual, modo }: Agenda
   const isHoje = isSameDay(dataObj, new Date())
 
   return (
+    <ConveniosProvider value={convenios}>
     <div className="space-y-4">
       {/* Barra de navegação */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -162,6 +167,7 @@ export function AgendaView({ consultas, profissionais, dataAtual, modo }: Agenda
         />
       )}
     </div>
+    </ConveniosProvider>
   )
 }
 
@@ -264,6 +270,7 @@ function ConsultaCard({
   onMudarStatus: (id: string, status: 'agendada' | 'confirmada' | 'compareceu' | 'faltou' | 'cancelada') => void
 }) {
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
+  const convenio = useConvenios().find((cv) => cv.id === c.convenio_id)
 
   const st = STATUS_CONFIG[c.status] ?? STATUS_CONFIG.agendada
   const corBorda = PROFISSIONAL_COLORS[c.profissional.role] ?? 'border-l-slate-300'
@@ -285,6 +292,11 @@ function ConsultaCard({
                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
                   <Video className="h-3 w-3" />
                   Online
+                </Badge>
+              )}
+              {convenio && !convenio.particular && (
+                <Badge variant="outline" className="text-xs border-sky-200 text-sky-700 bg-sky-50">
+                  {convenio.nome}
                 </Badge>
               )}
             </div>

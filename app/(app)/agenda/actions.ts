@@ -6,18 +6,29 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { registrarAuditoria } from '@/lib/audit/log'
 import { enviarEmailRecusaAgendamento } from '@/lib/email/recusa-agendamento'
+import { verificarConvenioAceito } from '@/lib/convenios/servidor'
+
+const textoOpcional = z
+  .string()
+  .max(60)
+  .optional()
+  .nullable()
+  .transform((v) => v?.trim() || null)
 
 const consultaSchema = z.object({
   paciente_id: z.string().uuid('Selecione um paciente válido'),
   profissional_id: z.string().uuid('Selecione um profissional válido'),
+  convenio_id: z.string().uuid('Selecione o convênio'),
   tipo: z.enum(['presencial', 'teleconsulta']).default('presencial'),
   data: z.string().min(1, 'Data obrigatória'),
   hora_inicio: z.string().min(1, 'Horário de início obrigatório'),
   hora_fim: z.string().min(1, 'Horário de fim obrigatório'),
   valor_cobrado: z
-    .union([z.number().positive('Valor deve ser positivo'), z.null()])
+    .union([z.number().nonnegative('Valor não pode ser negativo'), z.null()])
     .optional()
     .nullable(),
+  numero_carteirinha: textoOpcional,
+  numero_guia: textoOpcional,
   observacoes: z
     .string()
     .optional()
@@ -30,6 +41,31 @@ const consultaSchema = z.object({
 
 export type ConsultaFormValues = z.input<typeof consultaSchema>
 export type ActionResult = { success: true; id: string } | { success: false; error: string }
+
+type DadosConsulta = z.output<typeof consultaSchema>
+type ClienteServidor = Awaited<ReturnType<typeof createClient>>
+
+/** Regras do convênio validadas no servidor, mesmo que a requisição venha de fora da tela. */
+async function aplicarRegrasConvenio(
+  supabase: ClienteServidor,
+  dados: DadosConsulta,
+  convenioAtual?: string | null
+): Promise<{ ok: true; dados: DadosConsulta } | { ok: false; error: string }> {
+  const convenio = await verificarConvenioAceito(
+    supabase,
+    dados.profissional_id,
+    dados.convenio_id,
+    convenioAtual
+  )
+  if (!convenio.ok) return { ok: false, error: convenio.erro }
+
+  return {
+    ok: true,
+    dados: convenio.particular
+      ? { ...dados, numero_carteirinha: null, numero_guia: null }
+      : { ...dados, valor_cobrado: null },
+  }
+}
 
 export async function criarConsulta(values: unknown): Promise<ActionResult> {
   const supabase = await createClient()
@@ -61,9 +97,12 @@ export async function criarConsulta(values: unknown): Promise<ActionResult> {
   if (!paciente) return { success: false, error: 'Paciente não encontrado.' }
   if (!profissional) return { success: false, error: 'Profissional não encontrado ou inativo.' }
 
+  const regras = await aplicarRegrasConvenio(supabase, parsed.data)
+  if (!regras.ok) return { success: false, error: regras.error }
+
   const { data: consulta, error } = await supabase
     .from('consultas')
-    .insert({ ...parsed.data, criado_por: user.id, status: 'agendada' })
+    .insert({ ...regras.dados, criado_por: user.id, status: 'agendada' })
     .select('id')
     .single()
 
@@ -86,7 +125,17 @@ export async function atualizarConsulta(id: string, values: unknown): Promise<Ac
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' }
   }
 
-  const { error } = await supabase.from('consultas').update(parsed.data).eq('id', id)
+  const { data: atual } = await supabase
+    .from('consultas')
+    .select('convenio_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!atual) return { success: false, error: 'Consulta não encontrada.' }
+
+  const regras = await aplicarRegrasConvenio(supabase, parsed.data, atual.convenio_id)
+  if (!regras.ok) return { success: false, error: regras.error }
+
+  const { error } = await supabase.from('consultas').update(regras.dados).eq('id', id)
   if (error) return { success: false, error: 'Erro ao atualizar consulta. Tente novamente.' }
 
   await registrarAuditoria({ acao: 'update', entidade: 'consultas', entidadeId: id })
@@ -94,10 +143,69 @@ export async function atualizarConsulta(id: string, values: unknown): Promise<Ac
   return { success: true, id }
 }
 
+export type StatusResult =
+  | { success: true; id: string; aviso?: string }
+  | { success: false; error: string }
+
+/**
+ * Consulta por convênio marcada como realizada gera um lançamento pendente
+ * (forma de pagamento "convênio"), a ser baixado quando o plano repassar.
+ * Retorna um aviso para a tela quando algo precisa de atenção.
+ */
+async function gerarLancamentoConvenio(
+  supabase: ClienteServidor,
+  consultaId: string,
+  usuarioId: string
+): Promise<string | undefined> {
+  const { data: c } = await supabase
+    .from('consultas')
+    .select('id, paciente_id, profissional_id, convenio_id, data, numero_guia')
+    .eq('id', consultaId)
+    .maybeSingle()
+  if (!c) return
+
+  const convenio = await verificarConvenioAceito(supabase, c.profissional_id, c.convenio_id, c.convenio_id)
+  if (!convenio.ok || convenio.particular) return
+
+  const { count } = await supabase
+    .from('financeiro')
+    .select('id', { count: 'exact', head: true })
+    .eq('consulta_id', c.id)
+    .neq('status', 'cancelado')
+  if ((count ?? 0) > 0) return
+
+  const { data: lancamento, error } = await supabase
+    .from('financeiro')
+    .insert({
+      paciente_id: c.paciente_id,
+      profissional_id: c.profissional_id,
+      consulta_id: c.id,
+      convenio_id: convenio.id,
+      tipo: 'consulta',
+      descricao: `Consulta — ${convenio.nome}${c.numero_guia ? ` (guia ${c.numero_guia})` : ''}`,
+      valor: convenio.valorRepasse ?? 0,
+      forma_pagamento: 'convenio',
+      status: 'pendente',
+      data_vencimento: c.data,
+      registrado_por: usuarioId,
+    })
+    .select('id')
+    .single()
+
+  if (error) return 'Status atualizado, mas não foi possível gerar o lançamento do convênio.'
+
+  await registrarAuditoria({ acao: 'create', entidade: 'financeiro', entidadeId: lancamento.id })
+  revalidatePath('/financeiro')
+
+  if (convenio.valorRepasse === null) {
+    return `Lançamento do ${convenio.nome} criado com R$ 0,00. Cadastre o valor de repasse em Convênios e ajuste o lançamento.`
+  }
+}
+
 export async function atualizarStatusConsulta(
   id: string,
   status: 'agendada' | 'confirmada' | 'compareceu' | 'faltou' | 'cancelada'
-): Promise<ActionResult> {
+): Promise<StatusResult> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -108,8 +216,12 @@ export async function atualizarStatusConsulta(
   if (error) return { success: false, error: 'Erro ao atualizar status' }
 
   await registrarAuditoria({ acao: 'update', entidade: 'consultas', entidadeId: id })
+
+  const aviso =
+    status === 'compareceu' ? await gerarLancamentoConvenio(supabase, id, user.id) : undefined
+
   revalidatePath('/agenda')
-  return { success: true, id }
+  return { success: true, id, aviso }
 }
 
 // ── Agendamentos online pendentes ────────────────────────────

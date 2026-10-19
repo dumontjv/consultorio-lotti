@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { validarCPF, limparCPF } from '@/lib/validators/cpf'
 import { validarTelefone } from '@/lib/validators/telefone'
+import { verificarConvenioAceito } from '@/lib/convenios/servidor'
 import {
   DIAS_ANTECEDENCIA_MAXIMA,
   DURACAO_POR_ROLE,
@@ -94,6 +95,13 @@ const agendamentoSchema = z.object({
     .transform((v) => (v ? limparCPF(v) : undefined))
     .refine((v) => !v || validarCPF(v), 'CPF inválido'),
   motivo: z.string().trim().min(3, 'Descreva brevemente o motivo').max(500, 'Máximo de 500 caracteres'),
+  convenio_id: z.string().uuid('Escolha Particular ou um convênio'),
+  numero_carteirinha: z
+    .string()
+    .trim()
+    .max(60, 'Número da carteirinha muito longo')
+    .optional()
+    .transform((v) => v || undefined),
   lgpd: z.literal(true, { error: 'É necessário aceitar o uso dos dados' }),
   // Honeypot: campo invisível que só robôs preenchem
   website: z.string().max(0).optional(),
@@ -140,6 +148,12 @@ export async function criarAgendamentoOnline(values: unknown): Promise<Agendamen
   const horaFim = paraHora(paraMinutos(v.hora) + agenda.duracao)
 
   const admin = createAdminClient()
+  const convenio = await verificarConvenioAceito(admin, v.profissional_id, v.convenio_id)
+  if (!convenio.ok) return { success: false, error: convenio.erro }
+  if (!convenio.particular && !v.numero_carteirinha) {
+    return { success: false, error: 'Informe o número da carteirinha do convênio.' }
+  }
+
   const { data, error } = await admin.rpc('criar_agendamento_online', {
     p_profissional_id: v.profissional_id,
     p_data: v.data,
@@ -151,10 +165,18 @@ export async function criarAgendamentoOnline(values: unknown): Promise<Agendamen
     p_cpf: v.cpf ?? null,
     p_motivo: v.motivo,
     p_ip_hash: await hashDoIp(),
+    p_convenio_id: convenio.id,
+    p_numero_carteirinha: convenio.particular ? null : (v.numero_carteirinha ?? null),
     p_limite_por_hora: LIMITE_POR_HORA,
   })
 
   if (error) {
+    if (error.message.includes('CONVENIO_NAO_ACEITO')) {
+      return { success: false, error: 'A profissional não atende por este convênio.' }
+    }
+    if (error.message.includes('CARTEIRINHA_OBRIGATORIA')) {
+      return { success: false, error: 'Informe o número da carteirinha do convênio.' }
+    }
     if (error.message.includes('LIMITE_EXCEDIDO')) {
       return {
         success: false,

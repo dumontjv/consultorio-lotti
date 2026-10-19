@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { AgendaView } from '@/components/agenda/AgendaView'
 import { PendentesConfirmacao, type AgendamentoPendente } from '@/components/agenda/PendentesConfirmacao'
+import { carregarConvenios } from '@/lib/convenios/servidor'
 import type { ConsultaDetalhada, Profile } from '@/types/domain'
 
 interface PageProps {
@@ -41,7 +42,7 @@ export default async function AgendaPage({ searchParams }: PageProps) {
       `id, data, hora_inicio, hora_fim, protocolo, motivo, solicitante_nome, solicitante_telefone,
        solicitante_email, created_at,
        paciente:pacientes(id, nome_completo),
-       profissional:profiles(id, nome_completo, role)`
+       profissional:profiles!profissional_id(id, nome_completo, role)`
     )
     .eq('status', 'pendente_confirmacao')
     .order('data', { ascending: true })
@@ -82,8 +83,9 @@ export default async function AgendaPage({ searchParams }: PageProps) {
     .select(
       `id, paciente_id, profissional_id, tipo, data, hora_inicio, hora_fim, status,
        valor_cobrado, observacoes, link_teleconsulta, criado_por, created_at, updated_at,
+       convenio_id, numero_carteirinha, numero_guia,
        paciente:pacientes(id, nome_completo, telefone_principal, email),
-       profissional:profiles(id, nome_completo, role, crm, crp)`
+       profissional:profiles!profissional_id(id, nome_completo, role, crm, crp)`
     )
     .gte('data', dataInicio)
     .lte('data', dataFim)
@@ -94,7 +96,7 @@ export default async function AgendaPage({ searchParams }: PageProps) {
     consultasQuery = consultasQuery.eq('paciente_id', pacienteId)
   }
 
-  const { data: consultasRaw } = await consultasQuery
+  const [{ data: consultasRaw }, convenios] = await Promise.all([consultasQuery, carregarConvenios(supabase)])
 
   // Normaliza os dados para o tipo esperado
   const consultas: ConsultaDetalhada[] = (consultasRaw ?? []).map((c) => ({
@@ -110,6 +112,9 @@ export default async function AgendaPage({ searchParams }: PageProps) {
     observacoes: c.observacoes,
     link_teleconsulta: c.link_teleconsulta,
     criado_por: c.criado_por,
+    convenio_id: c.convenio_id,
+    numero_carteirinha: c.numero_carteirinha,
+    numero_guia: c.numero_guia,
     created_at: c.created_at,
     updated_at: c.updated_at,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,6 +188,7 @@ export default async function AgendaPage({ searchParams }: PageProps) {
           profissionais={profissionaisLista}
           dataAtual={dataAtual}
           modo={modo as 'dia' | 'semana'}
+          convenios={convenios}
         />
       )}
     </div>

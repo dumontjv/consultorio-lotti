@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronRight } from 'lucide-react'
 import { PacienteForm } from '@/components/pacientes/PacienteForm'
+import { carregarConvenios } from '@/lib/convenios/servidor'
 import type { Paciente } from '@/types/domain'
 
 interface PageProps {
@@ -49,7 +50,7 @@ export default async function EditarPacientePage({ params }: PageProps) {
         </p>
       </div>
 
-      <PacienteForm paciente={paciente as Paciente} modo="editar" />
+      <PacienteForm paciente={paciente as Paciente} modo="editar" convenios={await carregarConvenios(supabase)} />
     </div>
   )
 }
