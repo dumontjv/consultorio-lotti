@@ -12,7 +12,14 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type UserRole = 'medica' | 'psicologa' | 'secretaria' | 'admin'
 export type GeneroType = 'feminino' | 'masculino' | 'outro' | 'nao_informado'
 export type ConsultaTipo = 'presencial' | 'teleconsulta'
-export type ConsultaStatus = 'agendada' | 'confirmada' | 'compareceu' | 'faltou' | 'cancelada'
+export type ConsultaStatus =
+  | 'agendada'
+  | 'confirmada'
+  | 'compareceu'
+  | 'faltou'
+  | 'cancelada'
+  | 'pendente_confirmacao'
+export type ConsultaOrigem = 'interno' | 'online'
 export type DocumentoTipo = 'receita' | 'laudo' | 'atestado' | 'caso_clinico' | 'solicitacao_exame' | 'relatorio'
 export type DocumentoStatus = 'rascunho' | 'assinado' | 'entregue' | 'cancelado'
 export type FinanceiroTipo = 'consulta' | 'pacote' | 'outro' | 'despesa'
@@ -41,6 +48,7 @@ export interface Database {
           email: string
           telefone: string | null
           foto_url: string | null
+          disponibilidade: Json | null
           ativo: boolean
           created_at: string
           updated_at: string
@@ -54,6 +62,7 @@ export interface Database {
           email: string
           telefone?: string | null
           foto_url?: string | null
+          disponibilidade?: Json | null
           ativo?: boolean
           created_at?: string
           updated_at?: string
@@ -67,6 +76,7 @@ export interface Database {
           email?: string
           telefone?: string | null
           foto_url?: string | null
+          disponibilidade?: Json | null
           ativo?: boolean
           created_at?: string
           updated_at?: string
@@ -289,6 +299,12 @@ export interface Database {
           observacoes: string | null
           link_teleconsulta: string | null
           criado_por: string | null
+          origem: ConsultaOrigem
+          protocolo: string | null
+          motivo: string | null
+          solicitante_nome: string | null
+          solicitante_telefone: string | null
+          solicitante_email: string | null
           created_at: string
           updated_at: string
         }
@@ -305,6 +321,12 @@ export interface Database {
           observacoes?: string | null
           link_teleconsulta?: string | null
           criado_por?: string | null
+          origem?: ConsultaOrigem
+          protocolo?: string | null
+          motivo?: string | null
+          solicitante_nome?: string | null
+          solicitante_telefone?: string | null
+          solicitante_email?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -321,6 +343,12 @@ export interface Database {
           observacoes?: string | null
           link_teleconsulta?: string | null
           criado_por?: string | null
+          origem?: ConsultaOrigem
+          protocolo?: string | null
+          motivo?: string | null
+          solicitante_nome?: string | null
+          solicitante_telefone?: string | null
+          solicitante_email?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -678,6 +706,22 @@ export interface Database {
       update_updated_at: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      criar_agendamento_online: {
+        Args: {
+          p_profissional_id: string
+          p_data: string
+          p_hora_inicio: string
+          p_hora_fim: string
+          p_nome: string
+          p_telefone: string
+          p_email: string
+          p_cpf: string | null
+          p_motivo: string
+          p_ip_hash: string
+          p_limite_por_hora?: number
+        }
+        Returns: { id_consulta: string; numero_protocolo: string }[]
       }
     }
 

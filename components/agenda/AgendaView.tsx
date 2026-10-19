@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTransition, useCallback, useState } from 'react'
 import { format, addDays, subDays, addWeeks, subWeeks, startOfWeek, endOfWeek, isSameDay, parseISO } from 'date-fns'
@@ -27,6 +28,7 @@ const STATUS_CONFIG = {
   compareceu: { label: 'Compareceu', class: 'border-green-200 text-green-700 bg-green-50' },
   faltou: { label: 'Faltou', class: 'border-rose-200 text-rose-600 bg-rose-50' },
   cancelada: { label: 'Cancelada', class: 'border-slate-100 text-slate-400 bg-slate-50' },
+  pendente_confirmacao: { label: 'Aguardando confirmação', class: 'border-amber-200 text-amber-700 bg-amber-50' },
 }
 
 const PROFISSIONAL_COLORS: Record<string, string> = {
@@ -298,8 +300,15 @@ function ConsultaCard({
             )}
           </div>
 
-          {/* Ações rápidas */}
-          {!cancelada && (
+          {/* Pedidos online são aprovados/rejeitados na aba de pendentes (a rejeição envia e-mail) */}
+          {c.status === 'pendente_confirmacao' ? (
+            <Link
+              href="/agenda?aba=pendentes"
+              className="shrink-0 text-xs font-medium text-amber-700 hover:underline"
+            >
+              Analisar
+            </Link>
+          ) : !cancelada && (
             <div className="flex items-center gap-1 shrink-0">
               {confirmandoCancelar ? (
                 <>

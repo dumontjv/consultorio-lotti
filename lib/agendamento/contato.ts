@@ -1,0 +1,1 @@
+export const TELEFONES_CLINICA = ['(21) 3392-2142', '(21) 2425-5230']
